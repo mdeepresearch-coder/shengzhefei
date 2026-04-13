@@ -620,7 +620,7 @@ async function getFile(path,s) {
     const content=new TextDecoder('utf-8').decode(bytes);
     return{sha:d.sha,content};
   }
-  catch(e){if(e.message.includes('404'))return{sha:null,content:null};throw e;}
+  catch(e){if(e.message.includes('404')||e.message.includes('仓库不存在'))return{sha:null,content:null};throw e;}
 }
 async function putTxt(path,content,msg,sha,s){
   const body={message:msg,content:btoa(unescape(encodeURIComponent(content))),branch:s.branch};
