@@ -1,0 +1,34 @@
+[
+  {
+    "id": "demo-001",
+    "uploadTime": "2026-04-13T10:00:00",
+    "from": "上海",
+    "fromCode": "PVG",
+    "to": "米兰",
+    "toCode": "MXP",
+    "price": 5007,
+    "tripType": "往返",
+    "airline": "中国国航",
+    "departDate": "2026-07-01",
+    "returnDate": "2026-07-08",
+    "image": "images/demo-shanghai-milan.jpg",
+    "ctripUrl": "https://flights.ctrip.com",
+    "note": "经北京大兴中转，含23kg托运"
+  },
+  {
+    "id": "demo-002",
+    "uploadTime": "2026-04-13T09:30:00",
+    "from": "北京",
+    "fromCode": "PKX",
+    "to": "雅典",
+    "toCode": "ATH",
+    "price": 4046,
+    "tripType": "往返",
+    "airline": "吉祥航空",
+    "departDate": "2026-07-05",
+    "returnDate": "2026-07-16",
+    "image": "images/demo-beijing-athens.jpg",
+    "ctripUrl": "https://flights.ctrip.com",
+    "note": "经上海中转，含23kg托运，改期0元起"
+  }
+]
