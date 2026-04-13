@@ -482,8 +482,8 @@ function ctripUrl() {
   const dep=g('rDep'),ret=g('rRet'),type=g('rType');
   if(!f||!t||!dep)return'';
   return type==='往返'&&ret
-    ?`https://flights.ctrip.com/online/list/round-${f}-${t}?depdate=${dep}&retdate=${ret}`
-    :`https://flights.ctrip.com/online/list/oneway-${f}-${t}?depdate=${dep}`;
+    ?`https://flights.ctrip.com/international/search/round-${f}-${t}?depDate=${dep}&retDate=${ret}`
+    :`https://flights.ctrip.com/international/search/oneway-${f}-${t}?depDate=${dep}`;
 }
 function updUrl(){$$('urlPrev').textContent=ctripUrl()||'请填写城市和出发日期…';}
 
