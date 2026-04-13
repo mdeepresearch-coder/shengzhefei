@@ -181,12 +181,12 @@
 
     <!-- State: idle -->
     <div id="stIdle">
-      <label class="drop-zone" id="dropZone" for="imgFile">
-        <input type="file" id="imgFile" accept="image/*" onchange="onFile(this.files[0])">
+      <div class="drop-zone" id="dropZone" onclick="id('imgFile').click()">
+        <input type="file" id="imgFile" accept="image/*" style="display:none" onchange="onFile(this.files[0])">
         <div class="dz-icon">🖼</div>
         <div class="dz-t">点击选择 / 拖入截图</div>
         <div class="dz-s">或直接 <kbd>⌘V</kbd> 粘贴，自动识别信息</div>
-      </label>
+      </div>
     </div>
 
     <!-- State: loading -->
@@ -329,7 +329,7 @@ async function analyze() {
     let info;
     if (aiMode === 'gemini') {
       id('loadMsg').textContent = 'Gemini 正在识别…';
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [
