@@ -83,22 +83,53 @@
     .card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,.13); }
     .card:active { transform: translateY(0); }
 
-    /* Screenshot image — show as-is, full width, capped height */
+    /* Screenshot image — full image, no crop */
     .card-img-wrap {
       width: 100%;
-      max-height: 480px;
-      overflow: hidden;
       background: linear-gradient(160deg, #dbeafe, #bfdbfe);
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
+      position: relative;
+      overflow: hidden;
     }
     .card-img {
       width: 100%;
       display: block;
-      object-fit: cover;
-      object-position: top;
+      cursor: zoom-in;
     }
+    .zoom-hint {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      background: rgba(0,0,0,.45);
+      color: white;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 99px;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Lightbox */
+    #lb {
+      display: none;
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,.88);
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    #lb.on { display: flex; }
+    #lb img {
+      max-width: min(92vw, 520px);
+      max-height: 92vh;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.6);
+    }
+    #lb-close {
+      position: absolute; top: 16px; right: 18px;
+      color: white; font-size: 28px; cursor: pointer;
+      line-height: 1; opacity: .75;
+    }
+    #lb-close:hover { opacity: 1; }
     .card-img-ph {
       width: 100%; height: 200px;
       display: flex; align-items: center; justify-content: center;
@@ -197,6 +228,12 @@
 </head>
 <body>
 
+<!-- Lightbox -->
+<div id="lb" onclick="closeLb()">
+  <span id="lb-close" onclick="closeLb()">✕</span>
+  <img id="lb-img" src="" alt="" onclick="event.stopPropagation()">
+</div>
+
 <header>
   <h1>省着飞 ✈</h1>
   <p>人工精选低价机票 · 每日更新 · 点击直达预订</p>
@@ -268,11 +305,15 @@
     grid().innerHTML = list.map(f => {
       const imgHtml = f.image
         ? `<img class="card-img" src="${e(f.image)}" alt="${e(f.from)}到${e(f.to)}" loading="lazy"
+             onclick="event.preventDefault();event.stopPropagation();openLb(this.src)"
              onerror="this.parentElement.innerHTML='<div class=card-img-ph>✈️</div>'">`
         : `<div class="card-img-ph">✈️</div>`;
+      const imgWrap = f.image
+        ? `<div class="card-img-wrap">${imgHtml}<span class="zoom-hint">🔍 点击放大</span></div>`
+        : `<div class="card-img-wrap">${imgHtml}</div>`;
 
       return `<a class="card" href="${e(f.ctripUrl || '#')}" target="_blank" rel="noopener">
-        <div class="card-img-wrap">${imgHtml}</div>
+        ${imgWrap}
         <div class="card-info">
           <div class="route-line">
             <span class="city-name">${e(f.from)}</span>
@@ -306,6 +347,17 @@
   function e(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+
+  function openLb(src) {
+    document.getElementById('lb-img').src = src;
+    document.getElementById('lb').classList.add('on');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLb() {
+    document.getElementById('lb').classList.remove('on');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if(e.key==='Escape') closeLb(); });
 
   load();
 </script>
