@@ -6,838 +6,520 @@
   <title>省着飞 · 后台管理</title>
   <style>
     :root {
-      --primary: #1a56db;
-      --danger:  #e53e3e;
-      --success: #38a169;
-      --warn:    #d69e2e;
-      --bg:      #f7f8fc;
-      --card:    #ffffff;
-      --border:  #e2e8f0;
-      --text:    #1a202c;
-      --muted:   #718096;
+      --primary: #1a56db; --danger: #e53e3e; --success: #38a169;
+      --bg: #f7f8fc; --card: #fff; --border: #e2e8f0;
+      --text: #1a202c; --muted: #718096;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; background: var(--bg); color: var(--text); }
 
-    header {
-      background: #1a202c;
-      color: white;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+    header { background: #1a202c; color: white; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
     header h1 { font-size: 17px; font-weight: 700; }
     header a { color: #90cdf4; font-size: 13px; text-decoration: none; }
 
     .container { max-width: 680px; margin: 0 auto; padding: 20px 16px 80px; }
 
-    .section {
-      background: var(--card);
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-    .section-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 14px;
-    }
+    .section { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 20px; margin-bottom: 16px; }
+    .section-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 14px; }
 
-    /* ── Settings ── */
-    .settings-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+    /* Settings */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .fg { display: flex; flex-direction: column; gap: 4px; }
     .fg.full { grid-column: 1/-1; }
     .fg label { font-size: 11px; font-weight: 600; color: var(--muted); }
     input, select {
-      padding: 8px 11px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--text);
-      background: white;
-      width: 100%;
-      transition: border-color .15s;
+      padding: 8px 11px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 13px; font-family: inherit; color: var(--text); background: white; width: 100%;
     }
     input:focus, select:focus { outline: none; border-color: var(--primary); }
     .mono { font-family: monospace; font-size: 12px; }
 
-    /* ── Upload drop zone ── */
+    /* AI mode tabs */
+    .ai-tabs { display: flex; gap: 0; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+    .ai-tab {
+      flex: 1; padding: 9px 6px; text-align: center; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; background: white; color: var(--muted);
+      transition: all .15s; border-right: 1px solid var(--border);
+    }
+    .ai-tab:last-child { border-right: none; }
+    .ai-tab.active { background: var(--primary); color: white; }
+    .ai-panel { display: none; }
+    .ai-panel.show { display: block; }
+
+    /* Drop zone */
     .drop-zone {
-      border: 2.5px dashed var(--border);
-      border-radius: 14px;
-      padding: 40px 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all .2s;
-      position: relative;
-      background: white;
+      border: 2.5px dashed var(--border); border-radius: 12px; padding: 36px 20px;
+      text-align: center; cursor: pointer; transition: all .2s; position: relative; background: white;
     }
-    .drop-zone.dragover {
-      border-color: var(--primary);
-      background: #f0f7ff;
-    }
-    .drop-zone input[type=file] {
-      position: absolute; inset: 0;
-      opacity: 0; cursor: pointer; width: 100%; height: 100%;
-      border: none; padding: 0;
-    }
-    .drop-zone .dz-icon { font-size: 40px; margin-bottom: 10px; }
-    .drop-zone .dz-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .drop-zone .dz-sub { font-size: 13px; color: var(--muted); }
-    .drop-zone .dz-sub kbd {
-      background: #edf2f7;
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-family: monospace;
-      font-size: 12px;
-    }
+    .drop-zone:hover, .drop-zone.over { border-color: var(--primary); background: #f0f7ff; }
+    .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; border: none; padding: 0; }
+    .drop-zone .dz-icon { font-size: 36px; margin-bottom: 8px; }
+    .drop-zone .dz-t { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .drop-zone .dz-s { font-size: 12px; color: var(--muted); }
+    .drop-zone kbd { background: #edf2f7; border-radius: 3px; padding: 1px 5px; font-family: monospace; font-size: 11px; }
 
-    /* ── Analysis state ── */
-    #stateIdle    { display: block; }
-    #stateLoading { display: none; }
-    #stateResult  { display: none; }
+    /* States */
+    #stIdle    { display: block; }
+    #stLoading { display: none; }
+    #stResult  { display: none; }
 
-    .analyzing-wrap {
-      text-align: center;
-      padding: 32px 20px;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-      margin: 0 auto 14px;
-    }
+    .spin-wrap { text-align: center; padding: 30px; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .analyzing-wrap p { font-size: 14px; color: var(--muted); }
-    .analyzing-wrap strong { color: var(--text); }
+    .spin-wrap p { font-size: 13px; color: var(--muted); }
 
-    /* ── Result preview ── */
-    .result-layout {
-      display: grid;
-      grid-template-columns: 160px 1fr;
-      gap: 16px;
-      align-items: start;
-    }
-    .result-img {
-      width: 160px;
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .result-img img {
-      width: 100%;
-      display: block;
-      object-fit: cover;
-    }
+    /* Result layout */
+    .result-layout { display: grid; grid-template-columns: 140px 1fr; gap: 14px; align-items: start; }
+    .result-thumb { width: 140px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .result-thumb img { width: 100%; display: block; max-height: 300px; object-fit: cover; object-position: top; }
     .result-fields { display: flex; flex-direction: column; gap: 8px; }
-    .result-fields .fg-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-    /* ── Ctrip URL preview ── */
-    .url-box {
-      background: #f7faff;
-      border: 1px solid #bee3f8;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: #2b6cb0;
-      word-break: break-all;
-      line-height: 1.5;
-    }
-    .url-box .url-label { font-weight: 700; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+    /* Ctrip URL */
+    .url-box { background: #f0f7ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 10px 12px; margin-top: 12px; }
+    .url-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 3px; }
+    .url-val { font-size: 12px; color: #2b6cb0; word-break: break-all; line-height: 1.5; }
 
-    /* ── Buttons ── */
-    .btn {
-      padding: 10px 18px;
-      border-radius: 9px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      font-family: inherit;
-      transition: opacity .15s, transform .1s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn:active  { transform: scale(.97); }
+    /* Buttons */
+    .btn { padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; transition: opacity .15s, transform .1s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn:active { transform: scale(.97); }
     .btn:disabled { opacity: .45; cursor: not-allowed; }
     .btn-primary { background: var(--primary); color: white; }
     .btn-success { background: var(--success); color: white; }
     .btn-danger  { background: var(--danger);  color: white; }
-    .btn-ghost {
-      background: none; border: 1.5px solid var(--border);
-      color: var(--muted);
-    }
-    .btn-ghost:hover { border-color: #a0aec0; }
-    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-    .btn-sm  { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-ghost   { background: white; border: 1.5px solid var(--border); color: var(--muted); }
+    .btn-row     { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .btn-sm      { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
 
-    /* ── Alert ── */
-    .alert {
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      line-height: 1.5;
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-    }
-    .alert-warn  { background: #fffbeb; border: 1px solid #fbd38d; color: #744210; }
-    .alert-info  { background: #ebf8ff; border: 1px solid #bee3f8; color: #2a4365; }
+    /* Alert */
+    .alert { border-radius: 8px; padding: 10px 13px; font-size: 12px; line-height: 1.6; margin-top: 10px; }
+    .alert-info { background: #ebf8ff; border: 1px solid #bee3f8; color: #2a4365; }
+    .alert-warn { background: #fffbeb; border: 1px solid #fbd38d; color: #744210; }
     .alert a { color: inherit; font-weight: 700; }
 
-    /* ── Flight list ── */
-    .fl-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 8px;
-    }
-    .fl-item img {
-      width: 64px; height: 40px; object-fit: cover;
-      border-radius: 5px; flex-shrink: 0;
-      background: var(--bg);
-    }
-    .fl-item-info { flex: 1; min-width: 0; }
-    .fl-item-route { font-size: 14px; font-weight: 700; }
-    .fl-item-meta  { font-size: 12px; color: var(--muted); }
-    .fl-item-price { font-size: 17px; font-weight: 800; color: var(--danger); flex-shrink: 0; }
+    /* Progress */
+    #progress { display: none; background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 10px 13px; font-size: 13px; color: #2b6cb0; margin-top: 10px; }
 
-    /* ── Progress / Toast ── */
-    #progress {
-      display: none;
-      background: #ebf8ff; border: 1px solid #bee3f8;
-      border-radius: 8px; padding: 10px 14px;
-      font-size: 13px; color: #2b6cb0; margin-top: 10px;
-    }
-    #toast {
-      display: none;
-      position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
-      background: #1a202c; color: white;
-      padding: 11px 20px; border-radius: 9px;
-      font-size: 13px; z-index: 999;
-      min-width: 180px; text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,.2);
-    }
+    /* Toast */
+    #toast { display: none; position: fixed; top: 18px; left: 50%; transform: translateX(-50%); background: #1a202c; color: white; padding: 11px 20px; border-radius: 9px; font-size: 13px; z-index: 999; min-width: 180px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.2); }
     #toast.success { background: var(--success); }
     #toast.error   { background: var(--danger); }
 
+    /* Flight list */
+    .fl-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+    .fl-thumb { width: 56px; height: 70px; object-fit: cover; object-position: top; border-radius: 5px; background: var(--bg); flex-shrink: 0; }
+    .fl-info { flex: 1; min-width: 0; }
+    .fl-route { font-size: 14px; font-weight: 700; }
+    .fl-meta  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .fl-price { font-size: 17px; font-weight: 800; color: var(--danger); flex-shrink: 0; }
+
     @media (max-width: 500px) {
-      .settings-grid { grid-template-columns: 1fr; }
+      .grid2, .row2 { grid-template-columns: 1fr; }
       .fg.full { grid-column: 1; }
       .result-layout { grid-template-columns: 1fr; }
-      .result-img { width: 100%; }
+      .result-thumb { width: 100%; }
     }
   </style>
 </head>
 <body>
-
 <header>
-  <h1>✈ 省着飞 · 后台管理</h1>
+  <h1>✈ 省着飞 · 后台</h1>
   <a href="./index.html" target="_blank">查看前台 →</a>
 </header>
-
 <div id="toast"></div>
-
 <div class="container">
 
-  <!-- ── 设置 ── -->
+  <!-- ── 连接设置 ── -->
   <div class="section">
     <div class="section-title">⚙ 连接设置</div>
-
-    <div class="settings-grid" style="margin-bottom:10px">
-      <div class="fg">
-        <label>GitHub 用户名</label>
-        <input id="ghOwner" placeholder="your-username">
-      </div>
-      <div class="fg">
-        <label>仓库名</label>
-        <input id="ghRepo" placeholder="shengzhefei">
-      </div>
-      <div class="fg">
-        <label>分支</label>
-        <input id="ghBranch" placeholder="main" value="main">
-      </div>
-      <div class="fg">
-        <label>GitHub Token（repo 权限）</label>
-        <input id="ghToken" type="password" placeholder="ghp_xxxxxxxx" class="mono">
-      </div>
-      <div class="fg full">
-        <label>Anthropic API Key（用于图片自动识别）</label>
-        <input id="claudeKey" type="password" placeholder="sk-ant-xxxxxxxx" class="mono">
-      </div>
+    <div class="grid2">
+      <div class="fg"><label>GitHub 用户名</label><input id="ghOwner" placeholder="mdeepresearch-coder"></div>
+      <div class="fg"><label>仓库名</label><input id="ghRepo" placeholder="shengzhefei"></div>
+      <div class="fg"><label>分支</label><input id="ghBranch" value="main"></div>
+      <div class="fg"><label>GitHub Token（repo 权限）</label><input id="ghToken" type="password" placeholder="ghp_xxx" class="mono"></div>
     </div>
-
-    <div class="alert alert-info" style="margin-bottom:10px">
-      <span>💡</span>
-      <span>API Key 仅保存在本地浏览器，不上传任何地方。
-      GitHub Token 需 <strong>repo</strong> 权限；
-      Anthropic Key 在 <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> 创建。</span>
-    </div>
-
     <div class="btn-row">
       <button class="btn btn-primary btn-sm" onclick="saveSettings()">保存设置</button>
-      <button class="btn btn-ghost  btn-sm" onclick="testGitHub()">测试 GitHub</button>
+      <button class="btn btn-ghost  btn-sm" onclick="testGH()">测试连接</button>
     </div>
   </div>
 
-  <!-- ── 上传截图 ── -->
+  <!-- ── 上传发布 ── -->
   <div class="section">
-    <div class="section-title">📸 上传截图 · 自动识别发布</div>
+    <div class="section-title">📸 上传截图 · 发布机票</div>
+
+    <!-- AI 模式选择 -->
+    <div class="ai-tabs">
+      <button class="ai-tab active" data-mode="gemini" onclick="setMode('gemini')">🆓 Gemini 免费识别</button>
+      <button class="ai-tab"        data-mode="manual" onclick="setMode('manual')">✏️ 手动填写</button>
+      <button class="ai-tab"        data-mode="claude" onclick="setMode('claude')">✨ Claude</button>
+    </div>
+
+    <!-- Gemini key input -->
+    <div class="ai-panel show" id="panelGemini">
+      <div class="fg">
+        <label>Gemini API Key（免费，<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary)">aistudio.google.com</a> 获取）</label>
+        <input id="geminiKey" type="password" placeholder="AIzaSy..." class="mono">
+      </div>
+      <div class="alert alert-info">每天 1500 次免费，足够日常使用。注册 Google 账号后 1 分钟可拿到 Key。</div>
+    </div>
+
+    <!-- Claude key input -->
+    <div class="ai-panel" id="panelClaude">
+      <div class="fg">
+        <label>Anthropic API Key</label>
+        <input id="claudeKey" type="password" placeholder="sk-ant-..." class="mono">
+      </div>
+    </div>
+
+    <!-- Manual tip -->
+    <div class="ai-panel" id="panelManual">
+      <div class="alert alert-warn">手动模式：上传截图后自行填写城市/价格/日期，携程链接自动生成。</div>
+    </div>
+
+    <div style="height:12px"></div>
 
     <!-- State: idle -->
-    <div id="stateIdle">
-      <label class="drop-zone" id="dropZone">
-        <input type="file" id="imgFile" accept="image/*" onchange="onFileSelected(this.files[0])">
+    <div id="stIdle">
+      <label class="drop-zone" id="dropZone" for="imgFile">
+        <input type="file" id="imgFile" accept="image/*" onchange="onFile(this.files[0])">
         <div class="dz-icon">🖼</div>
-        <div class="dz-title">点击选择 / 拖入截图</div>
-        <div class="dz-sub">或直接 <kbd>⌘V</kbd> 粘贴截图，自动识别所有信息</div>
+        <div class="dz-t">点击选择 / 拖入截图</div>
+        <div class="dz-s">或直接 <kbd>⌘V</kbd> 粘贴，自动识别信息</div>
       </label>
     </div>
 
     <!-- State: loading -->
-    <div id="stateLoading">
-      <div class="analyzing-wrap">
+    <div id="stLoading">
+      <div class="spin-wrap">
         <div class="spinner"></div>
-        <p id="loadingMsg"><strong>Claude 正在识别截图…</strong></p>
-        <p style="margin-top:6px;font-size:12px">自动提取航线、价格、日期等信息</p>
+        <p id="loadMsg">正在识别截图…</p>
       </div>
     </div>
 
     <!-- State: result -->
-    <div id="stateResult">
+    <div id="stResult">
       <div class="result-layout">
-        <div class="result-img">
-          <img id="resultImg" alt="截图">
-        </div>
+        <div class="result-thumb"><img id="rImg" alt="截图"></div>
         <div class="result-fields">
-          <div class="fg-row">
-            <div class="fg">
-              <label>出发城市</label>
-              <input id="rFrom" placeholder="上海">
-            </div>
-            <div class="fg">
-              <label>出发机场代码</label>
-              <input id="rFromCode" placeholder="PVG" style="text-transform:uppercase">
-            </div>
+          <div class="row2">
+            <div class="fg"><label>出发城市</label><input id="rFrom" placeholder="北京"></div>
+            <div class="fg"><label>出发机场代码</label><input id="rFromCode" placeholder="PKX" style="text-transform:uppercase" oninput="updUrl()"></div>
           </div>
-          <div class="fg-row">
-            <div class="fg">
-              <label>目的城市</label>
-              <input id="rTo" placeholder="米兰">
-            </div>
-            <div class="fg">
-              <label>目的机场代码</label>
-              <input id="rToCode" placeholder="MXP" style="text-transform:uppercase">
-            </div>
+          <div class="row2">
+            <div class="fg"><label>目的城市</label><input id="rTo" placeholder="悉尼"></div>
+            <div class="fg"><label>目的机场代码</label><input id="rToCode" placeholder="SYD" style="text-transform:uppercase" oninput="updUrl()"></div>
           </div>
-          <div class="fg-row">
-            <div class="fg">
-              <label>价格（元/人含税）</label>
-              <input id="rPrice" type="number" placeholder="5007">
-            </div>
-            <div class="fg">
-              <label>行程类型</label>
-              <select id="rTripType" onchange="updateCtripUrl()">
+          <div class="row2">
+            <div class="fg"><label>价格（元/人）</label><input id="rPrice" type="number" placeholder="3292"></div>
+            <div class="fg"><label>类型</label>
+              <select id="rType" onchange="updUrl()">
                 <option value="往返">往返</option>
                 <option value="单程">单程</option>
               </select>
             </div>
           </div>
-          <div class="fg-row">
-            <div class="fg">
-              <label>去程日期</label>
-              <input id="rDepartDate" type="date" onchange="updateCtripUrl()">
-            </div>
-            <div class="fg">
-              <label>返程日期</label>
-              <input id="rReturnDate" type="date" onchange="updateCtripUrl()">
-            </div>
-          </div>
-          <div class="fg">
-            <label>航空公司</label>
-            <input id="rAirline" placeholder="中国国航">
-          </div>
-          <div class="fg">
-            <label>备注（行李/中转等）</label>
-            <input id="rNote" placeholder="含23kg托运，经北京中转">
+          <div class="row2">
+            <div class="fg"><label>去程日期</label><input id="rDep" type="date" oninput="updUrl()"></div>
+            <div class="fg"><label>返程日期</label><input id="rRet" type="date" oninput="updUrl()"></div>
           </div>
         </div>
       </div>
 
-      <!-- Ctrip URL preview -->
-      <div style="margin-top:14px">
-        <div class="url-box">
-          <div class="url-label">🔗 自动生成携程搜索链接</div>
-          <div id="ctripUrlPreview" style="word-break:break-all"></div>
-        </div>
+      <div class="url-box">
+        <div class="url-label">🔗 携程搜索链接（自动生成）</div>
+        <div class="url-val" id="urlPreview">请填写机场代码和日期…</div>
       </div>
 
       <div id="progress"></div>
 
-      <div class="btn-row" style="margin-top:14px">
-        <button class="btn btn-success" id="publishBtn" onclick="publishFlight()">
-          ✅ 发布到网页
-        </button>
-        <button class="btn btn-ghost" onclick="resetUpload()">重新上传</button>
+      <div class="btn-row">
+        <button class="btn btn-success" id="pubBtn" onclick="publish()">✅ 发布到网页</button>
+        <button class="btn btn-ghost"   onclick="reset()">重新上传</button>
       </div>
     </div>
   </div>
 
-  <!-- ── 已发布列表 ── -->
+  <!-- ── 已发布 ── -->
   <div class="section">
     <div class="section-title">📋 已发布机票</div>
     <div class="btn-row" style="margin-bottom:12px">
       <button class="btn btn-ghost btn-sm" onclick="loadList()">刷新列表</button>
     </div>
-    <div id="flightList">
-      <p style="color:var(--muted);font-size:13px">配置 GitHub 设置后点击刷新加载</p>
-    </div>
+    <div id="flList"><p style="color:var(--muted);font-size:13px">保存设置后点击刷新加载</p></div>
   </div>
 
 </div>
-
 <script>
-// ── State ────────────────────────────────────────────────────────────────────
+// ── State ──────────────────────────────────────────────────────────────────
+let b64 = null, mime = 'image/jpeg', dataUrl = null;
+let aiMode = 'gemini';
 
-let imgBase64    = null;   // raw base64 (no data: prefix)
-let imgMediaType = 'image/jpeg';
-let imgDataUrl   = null;
-
-// ── Settings ─────────────────────────────────────────────────────────────────
-
+// ── Settings ───────────────────────────────────────────────────────────────
 function saveSettings() {
-  localStorage.setItem('szf2_cfg', JSON.stringify({
-    owner:     id('ghOwner').value.trim(),
-    repo:      id('ghRepo').value.trim(),
-    branch:    id('ghBranch').value.trim() || 'main',
-    token:     id('ghToken').value.trim(),
-    claudeKey: id('claudeKey').value.trim(),
+  localStorage.setItem('szf3', JSON.stringify({
+    owner: v('ghOwner'), repo: v('ghRepo'), branch: v('ghBranch') || 'main',
+    token: v('ghToken'), geminiKey: v('geminiKey'), claudeKey: v('claudeKey'),
   }));
   toast('设置已保存', 'success');
 }
-
-function cfg() {
-  try { return JSON.parse(localStorage.getItem('szf2_cfg') || '{}'); }
-  catch(e) { return {}; }
-}
-
+function cfg() { try { return JSON.parse(localStorage.getItem('szf3') || '{}'); } catch(e){ return {}; } }
 function loadSettings() {
   const s = cfg();
-  if (s.owner)     id('ghOwner').value    = s.owner;
-  if (s.repo)      id('ghRepo').value     = s.repo;
-  if (s.branch)    id('ghBranch').value   = s.branch;
-  if (s.token)     id('ghToken').value    = s.token;
-  if (s.claudeKey) id('claudeKey').value  = s.claudeKey;
+  ['ghOwner','ghRepo','ghBranch','ghToken','geminiKey','claudeKey'].forEach(k => {
+    const key = k === 'ghOwner' ? 'owner' : k === 'ghRepo' ? 'repo' : k === 'ghBranch' ? 'branch' : k === 'ghToken' ? 'token' : k;
+    if (s[key]) id(k).value = s[key];
+  });
 }
-
-async function testGitHub() {
+async function testGH() {
   const s = cfg();
-  if (!s.owner || !s.repo || !s.token) { toast('请先填写并保存 GitHub 设置', 'error'); return; }
-  try {
-    const r = await ghGet(`/repos/${s.owner}/${s.repo}`);
-    toast(`连接成功：${r.full_name}`, 'success');
-  } catch(e) { toast('连接失败：' + e.message, 'error'); }
+  if (!s.owner || !s.token) { toast('请先填写并保存设置', 'error'); return; }
+  try { const r = await ghGet(`/repos/${s.owner}/${s.repo}`); toast(`连接成功：${r.full_name}`, 'success'); }
+  catch(e) { toast('连接失败：' + e.message, 'error'); }
 }
 
-// ── Drop zone / paste ────────────────────────────────────────────────────────
+// ── AI mode ────────────────────────────────────────────────────────────────
+function setMode(m) {
+  aiMode = m;
+  document.querySelectorAll('.ai-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
+  document.querySelectorAll('.ai-panel').forEach(p => p.classList.remove('show'));
+  id(`panel${m.charAt(0).toUpperCase()+m.slice(1)}`).classList.add('show');
+}
 
-const dropZone = document.getElementById('dropZone');
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('dragover');
-  const file = e.dataTransfer?.files?.[0];
-  if (file && file.type.startsWith('image/')) onFileSelected(file);
-});
-
+// ── File handling ──────────────────────────────────────────────────────────
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); const f = e.dataTransfer?.files?.[0]; if(f?.type.startsWith('image/')) onFile(f); });
 document.addEventListener('paste', e => {
-  if (id('stateIdle').style.display === 'none') return; // only when idle
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  for (const item of items) {
-    if (item.type.startsWith('image/')) {
-      onFileSelected(item.getAsFile());
-      break;
-    }
-  }
+  if (id('stIdle').style.display === 'none') return;
+  for (const item of e.clipboardData?.items || [])
+    if (item.type.startsWith('image/')) { onFile(item.getAsFile()); break; }
 });
 
-function onFileSelected(file) {
+function onFile(file) {
   if (!file) return;
-  const ext = (file.name || '').split('.').pop().toLowerCase();
-  imgMediaType = file.type || (ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg');
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    imgDataUrl = e.target.result;
-    imgBase64  = imgDataUrl.split(',')[1];
-    analyzeImage();
-  };
-  reader.readAsDataURL(file);
+  mime = file.type || 'image/jpeg';
+  const rd = new FileReader();
+  rd.onload = ev => { dataUrl = ev.target.result; b64 = dataUrl.split(',')[1]; analyze(); };
+  rd.readAsDataURL(file);
 }
 
-// ── Claude Vision analysis ────────────────────────────────────────────────────
-
-async function analyzeImage() {
+// ── AI Analysis ────────────────────────────────────────────────────────────
+async function analyze() {
   const s = cfg();
-
-  // Show loading
   setState('loading');
-  id('loadingMsg').innerHTML = '<strong>Claude 正在识别截图…</strong>';
 
-  // If no Claude key, skip to manual
-  if (!s.claudeKey) {
-    toast('未配置 Anthropic API Key，请手动填写信息', 'error');
-    id('resultImg').src = imgDataUrl;
-    setState('result');
-    updateCtripUrl();
-    return;
+  // Manual mode → skip AI
+  if (aiMode === 'manual') {
+    showResult(); return;
+  }
+
+  const key = aiMode === 'gemini' ? (v('geminiKey') || s.geminiKey) : (v('claudeKey') || s.claudeKey);
+  if (!key) {
+    toast(`请先填写 ${aiMode === 'gemini' ? 'Gemini' : 'Anthropic'} API Key`, 'error');
+    showResult(); return;
   }
 
   try {
-    id('loadingMsg').innerHTML = '<strong>连接 Claude Vision…</strong>';
+    const today = new Date().toISOString().slice(0,10);
+    const prompt = `这是一张机票截图（来自携程/飞猪/去哪儿等APP）。今天日期${today}。只返回JSON，不要其他文字：
+{"from":"出发城市中文","fromCode":"IATA大写","to":"目的城市中文","toCode":"IATA大写","price":数字,"tripType":"往返或单程","departDate":"YYYY-MM-DD","returnDate":"YYYY-MM-DD或null"}`;
 
-    const today = new Date().toISOString().slice(0, 10);
-
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': s.claudeKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 512,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: imgMediaType, data: imgBase64 }
-            },
-            {
-              type: 'text',
-              text: `这是一张携程机票截图。今天日期是 ${today}。
-请提取以下信息，以 JSON 格式返回，只返回 JSON 不要其他文字：
-
-{
-  "from": "出发城市中文（如：上海）",
-  "fromCode": "出发机场IATA三字码（大写，如：PVG）",
-  "to": "目的城市中文（如：米兰）",
-  "toCode": "目的机场IATA三字码（大写，如：MXP）",
-  "price": 数字（不含¥，如：5007）,
-  "tripType": "往返 或 单程",
-  "airline": "主要航空公司名称（如：中国国航）",
-  "departDate": "YYYY-MM-DD（去程日期，年份参考今天日期推断）",
-  "returnDate": "YYYY-MM-DD 或 null（返程日期）",
-  "note": "一句话备注，含行李额、中转信息等关键点，不超过30字"
-}`
-            }
-          ]
-        }]
-      })
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error?.message || `API ${resp.status}`);
+    let info;
+    if (aiMode === 'gemini') {
+      id('loadMsg').textContent = 'Gemini 正在识别…';
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [
+          { inlineData: { mimeType: mime, data: b64 } },
+          { text: prompt }
+        ]}]})
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error?.message || 'Gemini ' + r.status);
+      const txt = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      info = JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || 'null');
+    } else {
+      id('loadMsg').textContent = 'Claude 正在识别…';
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': key, 'anthropic-version':'2023-06-01', 'content-type':'application/json', 'anthropic-dangerous-direct-browser-access':'true' },
+        body: JSON.stringify({ model:'claude-opus-4-5', max_tokens:512, messages:[{ role:'user', content:[
+          { type:'image', source:{ type:'base64', media_type:mime, data:b64 }},
+          { type:'text', text:prompt }
+        ]}]})
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error?.message || 'Claude ' + r.status);
+      const txt = d.content?.[0]?.text || '';
+      info = JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || 'null');
     }
 
-    const data = await resp.json();
-    const raw = data.content?.[0]?.text || '';
-
-    // Extract JSON from response
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('解析失败，未找到 JSON');
-    const info = JSON.parse(jsonMatch[0]);
-
-    // Fill fields
-    id('rFrom').value       = info.from       || '';
-    id('rFromCode').value   = (info.fromCode  || '').toUpperCase();
-    id('rTo').value         = info.to         || '';
-    id('rToCode').value     = (info.toCode    || '').toUpperCase();
-    id('rPrice').value      = info.price      || '';
-    id('rTripType').value   = info.tripType === '单程' ? '单程' : '往返';
-    id('rAirline').value    = info.airline    || '';
-    id('rDepartDate').value = info.departDate || '';
-    id('rReturnDate').value = info.returnDate || '';
-    id('rNote').value       = info.note       || '';
-
-    id('resultImg').src = imgDataUrl;
-    setState('result');
-    updateCtripUrl();
-
+    if (info) {
+      id('rFrom').value     = info.from       || '';
+      id('rFromCode').value = (info.fromCode  || '').toUpperCase();
+      id('rTo').value       = info.to         || '';
+      id('rToCode').value   = (info.toCode    || '').toUpperCase();
+      id('rPrice').value    = info.price      || '';
+      id('rType').value     = info.tripType === '单程' ? '单程' : '往返';
+      id('rDep').value      = info.departDate || '';
+      id('rRet').value      = info.returnDate || '';
+    }
   } catch(e) {
-    console.error(e);
     toast('识别失败：' + e.message + '，请手动填写', 'error');
-    id('resultImg').src = imgDataUrl;
-    setState('result');
-    updateCtripUrl();
+    console.error(e);
   }
+  showResult();
 }
 
-// ── Ctrip URL ─────────────────────────────────────────────────────────────────
-
-function buildCtripUrl() {
-  const from       = id('rFromCode').value.trim().toUpperCase();
-  const to         = id('rToCode').value.trim().toUpperCase();
-  const tripType   = id('rTripType').value;
-  const departDate = id('rDepartDate').value;
-  const returnDate = id('rReturnDate').value;
-
-  if (!from || !to || !departDate) return '';
-
-  if (tripType === '往返' && returnDate) {
-    return `https://flights.ctrip.com/online/list/round-${from}-${to}?depdate=${departDate}&retdate=${returnDate}`;
-  } else {
-    return `https://flights.ctrip.com/online/list/oneway-${from}-${to}?depdate=${departDate}`;
-  }
+function showResult() {
+  id('rImg').src = dataUrl;
+  setState('result');
+  updUrl();
 }
 
-function updateCtripUrl() {
-  const url = buildCtripUrl();
-  id('ctripUrlPreview').textContent = url || '（请填写机场代码和出发日期）';
+// ── Ctrip URL ──────────────────────────────────────────────────────────────
+function ctripUrl() {
+  const f = v('rFromCode').toUpperCase(), t = v('rToCode').toUpperCase();
+  const dep = v('rDep'), ret = v('rRet'), type = v('rType');
+  if (!f || !t || !dep) return '';
+  return type === '往返' && ret
+    ? `https://flights.ctrip.com/online/list/round-${f}-${t}?depdate=${dep}&retdate=${ret}`
+    : `https://flights.ctrip.com/online/list/oneway-${f}-${t}?depdate=${dep}`;
+}
+function updUrl() {
+  const u = ctripUrl();
+  id('urlPreview').textContent = u || '请填写机场代码和出发日期…';
 }
 
-// Listen to field changes for live URL update
-['rFromCode','rToCode','rDepartDate','rReturnDate'].forEach(fid => {
-  document.addEventListener('input', e => { if (e.target.id === fid) updateCtripUrl(); });
-});
-
-// ── Publish ───────────────────────────────────────────────────────────────────
-
-async function publishFlight() {
+// ── Publish ────────────────────────────────────────────────────────────────
+async function publish() {
   const s = cfg();
-  if (!s.owner || !s.repo || !s.token) {
-    toast('请先配置并保存 GitHub 设置', 'error'); return;
-  }
-  if (!id('rFrom').value || !id('rTo').value || !id('rPrice').value) {
-    toast('请至少填写出发城市、目的城市和价格', 'error'); return;
-  }
-  if (!imgBase64) {
-    toast('请先上传截图', 'error'); return;
-  }
+  if (!s.owner || !s.repo || !s.token) { toast('请先保存 GitHub 设置', 'error'); return; }
+  if (!v('rFrom') || !v('rTo') || !v('rPrice')) { toast('请至少填写城市和价格', 'error'); return; }
+  if (!b64) { toast('请先上传截图', 'error'); return; }
 
-  id('publishBtn').disabled = true;
+  id('pubBtn').disabled = true;
   try {
-    const now      = new Date();
-    const flightId = `flight-${now.getTime()}`;
-    const ext      = imgMediaType.split('/')[1]?.replace('jpeg','jpg') || 'jpg';
-    const imgPath  = `images/${flightId}.${ext}`;
+    const now = new Date(), fid = `flight-${now.getTime()}`;
+    const ext = mime.split('/')[1]?.replace('jpeg','jpg') || 'jpg';
+    const imgPath = `images/${fid}.${ext}`;
 
     setProgress('上传截图…');
-    const existImg = await getFileInfo(imgPath);
-    await putBinaryFile(imgPath, imgBase64, `add image ${flightId}`, existImg.sha);
+    const exi = await getFile(imgPath);
+    await putBin(imgPath, b64, `add image ${fid}`, exi.sha);
 
-    setProgress('读取当前数据…');
-    const { sha, content } = await getFileInfo('flights.json');
-    let flights = [];
-    if (content) { try { flights = JSON.parse(content); } catch(e){} }
-
-    const ctripUrl = buildCtripUrl();
+    setProgress('更新数据…');
+    const { sha, content } = await getFile('flights.json');
+    let flights = []; try { flights = JSON.parse(content || '[]'); } catch(e){}
 
     flights.unshift({
-      id:          flightId,
-      uploadTime:  now.toISOString(),
-      from:        id('rFrom').value.trim(),
-      fromCode:    id('rFromCode').value.trim().toUpperCase(),
-      to:          id('rTo').value.trim(),
-      toCode:      id('rToCode').value.trim().toUpperCase(),
-      price:       parseFloat(id('rPrice').value),
-      tripType:    id('rTripType').value,
-      airline:     id('rAirline').value.trim(),
-      departDate:  id('rDepartDate').value,
-      returnDate:  id('rReturnDate').value,
-      image:       imgPath,
-      ctripUrl:    ctripUrl,
-      note:        id('rNote').value.trim(),
+      id: fid, uploadTime: now.toISOString(),
+      from: v('rFrom'), fromCode: v('rFromCode').toUpperCase(),
+      to:   v('rTo'),  toCode:   v('rToCode').toUpperCase(),
+      price: parseFloat(v('rPrice')), tripType: v('rType'),
+      departDate: v('rDep'), returnDate: v('rRet'),
+      image: imgPath, ctripUrl: ctripUrl(),
     });
 
-    setProgress('写入数据…');
-    await putFile('flights.json',
-      JSON.stringify(flights, null, 2),
-      `add: ${id('rFrom').value}→${id('rTo').value} ¥${id('rPrice').value}`,
-      sha);
+    await putTxt('flights.json', JSON.stringify(flights, null, 2),
+      `add: ${v('rFrom')}→${v('rTo')} ¥${v('rPrice')}`, sha);
 
     hideProgress();
-    toast(`✅ 发布成功！${id('rFrom').value}→${id('rTo').value} ¥${id('rPrice').value}`, 'success');
-    resetUpload();
-    loadList();
-
+    toast(`✅ 发布成功！${v('rFrom')}→${v('rTo')} ¥${v('rPrice')}`, 'success');
+    reset(); loadList();
   } catch(e) {
     hideProgress();
     toast('发布失败：' + e.message, 'error');
     console.error(e);
-  } finally {
-    id('publishBtn').disabled = false;
-  }
+  } finally { id('pubBtn').disabled = false; }
 }
 
-// ── List & Delete ─────────────────────────────────────────────────────────────
-
+// ── List ───────────────────────────────────────────────────────────────────
 async function loadList() {
   const s = cfg();
   if (!s.owner || !s.repo || !s.token) return;
-  const el = id('flightList');
+  const el = id('flList');
   el.innerHTML = '<p style="color:var(--muted);font-size:13px">加载中…</p>';
   try {
-    const { content } = await getFileInfo('flights.json');
-    const flights = content ? JSON.parse(content) : [];
-    if (!flights.length) {
-      el.innerHTML = '<p style="color:var(--muted);font-size:13px">暂无数据</p>';
-      return;
-    }
-    el.innerHTML = flights.map(f => {
-      const imgSrc = f.image
-        ? `https://raw.githubusercontent.com/${s.owner}/${s.repo}/${s.branch || 'main'}/${f.image}`
-        : '';
-      return `<div class="fl-item" id="li-${f.id}">
-        ${imgSrc
-          ? `<img src="${esc(imgSrc)}" onerror="this.style.opacity='.3'">`
-          : `<div style="width:64px;height:40px;background:#eee;border-radius:5px;flex-shrink:0"></div>`
-        }
-        <div class="fl-item-info">
-          <div class="fl-item-route">${esc(f.from)} → ${esc(f.to)}</div>
-          <div class="fl-item-meta">${esc(f.airline||'')} · ${f.departDate||''}</div>
+    const { content } = await getFile('flights.json');
+    const list = content ? JSON.parse(content) : [];
+    if (!list.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px">暂无数据</p>'; return; }
+    const raw = `https://raw.githubusercontent.com/${s.owner}/${s.repo}/${s.branch || 'main'}/`;
+    el.innerHTML = list.map(f => `
+      <div class="fl-item" id="li-${f.id}">
+        ${f.image ? `<img class="fl-thumb" src="${raw}${e(f.image)}" onerror="this.style.opacity='.3'">` : `<div style="width:56px;height:70px;background:#eee;border-radius:5px;flex-shrink:0"></div>`}
+        <div class="fl-info">
+          <div class="fl-route">${e(f.from)} → ${e(f.to)}</div>
+          <div class="fl-meta">${f.tripType || ''} · ${f.departDate || ''}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span class="fl-item-price">¥${f.price}</span>
-          <button class="btn btn-danger btn-sm" onclick="deleteFlight('${f.id}')">删除</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span class="fl-price">¥${f.price}</span>
+          <button class="btn btn-danger btn-sm" onclick="del('${f.id}')">删除</button>
         </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    el.innerHTML = `<p style="color:var(--danger);font-size:13px">加载失败：${e.message}</p>`;
-  }
+      </div>`).join('');
+  } catch(e) { el.innerHTML = `<p style="color:var(--danger);font-size:13px">加载失败：${e.message}</p>`; }
 }
 
-async function deleteFlight(fid) {
+async function del(fid) {
   if (!confirm('确认删除？')) return;
   try {
-    const { sha, content } = await getFileInfo('flights.json');
-    let flights = JSON.parse(content || '[]');
-    flights = flights.filter(f => f.id !== fid);
-    await putFile('flights.json', JSON.stringify(flights, null, 2), `remove ${fid}`, sha);
-    document.getElementById('li-' + fid)?.remove();
+    const { sha, content } = await getFile('flights.json');
+    const list = JSON.parse(content || '[]').filter(f => f.id !== fid);
+    await putTxt('flights.json', JSON.stringify(list, null, 2), `remove ${fid}`, sha);
+    id('li-' + fid)?.remove();
     toast('已删除', 'success');
-  } catch(e) {
-    toast('删除失败：' + e.message, 'error');
-  }
+  } catch(e) { toast('删除失败：' + e.message, 'error'); }
 }
 
-// ── GitHub API ────────────────────────────────────────────────────────────────
-
+// ── GitHub API ─────────────────────────────────────────────────────────────
 async function ghGet(path) {
   const s = cfg();
-  const r = await fetch(`https://api.github.com${path}`, {
-    headers: { 'Authorization': `token ${s.token}`, 'Accept': 'application/vnd.github.v3+json' }
-  });
-  if (!r.ok) throw new Error(`GitHub ${r.status}`);
+  const r = await fetch(`https://api.github.com${path}`, { headers:{ 'Authorization':`token ${s.token}`, 'Accept':'application/vnd.github.v3+json' }});
+  if (!r.ok) throw new Error('GitHub ' + r.status);
   return r.json();
 }
-
 async function ghPut(path, body) {
   const s = cfg();
-  const r = await fetch(`https://api.github.com${path}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${s.token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  const r = await fetch(`https://api.github.com${path}`, { method:'PUT', headers:{ 'Authorization':`token ${s.token}`, 'Accept':'application/vnd.github.v3+json', 'Content-Type':'application/json' }, body: JSON.stringify(body) });
   const d = await r.json();
-  if (!r.ok) throw new Error(d.message || `GitHub ${r.status}`);
+  if (!r.ok) throw new Error(d.message || 'GitHub ' + r.status);
   return d;
 }
-
-async function getFileInfo(filePath) {
+async function getFile(path) {
   const s = cfg();
-  try {
-    const d = await ghGet(`/repos/${s.owner}/${s.repo}/contents/${filePath}?ref=${s.branch || 'main'}`);
-    return { sha: d.sha, content: atob(d.content.replace(/\n/g,'')) };
-  } catch(e) {
-    if (e.message.includes('404')) return { sha: null, content: null };
-    throw e;
-  }
+  try { const d = await ghGet(`/repos/${s.owner}/${s.repo}/contents/${path}?ref=${s.branch||'main'}`); return { sha:d.sha, content:atob(d.content.replace(/\n/g,'')) }; }
+  catch(e) { if(e.message.includes('404')) return { sha:null, content:null }; throw e; }
 }
-
-async function putFile(filePath, content, message, sha) {
+async function putTxt(path, content, msg, sha) {
   const s = cfg();
-  const body = { message, content: btoa(unescape(encodeURIComponent(content))), branch: s.branch || 'main' };
+  const body = { message:msg, content:btoa(unescape(encodeURIComponent(content))), branch:s.branch||'main' };
   if (sha) body.sha = sha;
-  return ghPut(`/repos/${s.owner}/${s.repo}/contents/${filePath}`, body);
+  return ghPut(`/repos/${s.owner}/${s.repo}/contents/${path}`, body);
 }
-
-async function putBinaryFile(filePath, b64, message, sha) {
+async function putBin(path, b64content, msg, sha) {
   const s = cfg();
-  const body = { message, content: b64, branch: s.branch || 'main' };
+  const body = { message:msg, content:b64content, branch:s.branch||'main' };
   if (sha) body.sha = sha;
-  return ghPut(`/repos/${s.owner}/${s.repo}/contents/${filePath}`, body);
+  return ghPut(`/repos/${s.owner}/${s.repo}/contents/${path}`, body);
 }
 
-// ── UI helpers ────────────────────────────────────────────────────────────────
-
-function setState(name) {
-  id('stateIdle').style.display    = name === 'idle'    ? 'block' : 'none';
-  id('stateLoading').style.display = name === 'loading' ? 'block' : 'none';
-  id('stateResult').style.display  = name === 'result'  ? 'block' : 'none';
+// ── Helpers ────────────────────────────────────────────────────────────────
+function setState(n) {
+  id('stIdle').style.display    = n==='idle'    ? 'block' : 'none';
+  id('stLoading').style.display = n==='loading' ? 'block' : 'none';
+  id('stResult').style.display  = n==='result'  ? 'block' : 'none';
 }
-
-function resetUpload() {
-  imgBase64 = imgDataUrl = null;
-  imgMediaType = 'image/jpeg';
-  id('imgFile').value = '';
-  setState('idle');
-}
-
-function setProgress(msg)  { const e = id('progress'); e.style.display='block'; e.textContent='⏳ '+msg; }
-function hideProgress()    { id('progress').style.display='none'; }
-
-let _toastT;
-function toast(msg, type='') {
-  const e = id('toast');
-  e.textContent = msg;
-  e.className = type;
-  e.style.display = 'block';
-  clearTimeout(_toastT);
-  _toastT = setTimeout(() => e.style.display='none', 3600);
-}
-
+function reset() { b64=dataUrl=null; mime='image/jpeg'; id('imgFile').value=''; setState('idle'); }
+function setProgress(m) { const e=id('progress'); e.style.display='block'; e.textContent='⏳ '+m; }
+function hideProgress() { id('progress').style.display='none'; }
+let _tt; function toast(m,t='') { const el=id('toast'); el.textContent=m; el.className=t; el.style.display='block'; clearTimeout(_tt); _tt=setTimeout(()=>el.style.display='none',3500); }
 function id(x) { return document.getElementById(x); }
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function v(x)  { return id(x)?.value?.trim() || ''; }
+function e(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 loadSettings();
 </script>
 </body>
