@@ -575,13 +575,41 @@ async function del(fid) {
 async function ghGet(path,token) {
   const s=readCfg();
   const tk=token||s.token;
-  const r=await fetch(`https://api.github.com${path}`,{headers:{'Authorization':`token ${tk}`,'Accept':'application/vnd.github.v3+json'}});
-  if(!r.ok)throw new Error('GitHub '+r.status);
+  let r;
+  try {
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),15000); // 15s 超时
+    r=await fetch(`https://api.github.com${path}`,{
+      signal:ctrl.signal,
+      headers:{'Authorization':`Bearer ${tk}`,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}
+    });
+    clearTimeout(tid);
+  } catch(netErr) {
+    if(netErr.name==='AbortError') throw new Error('请求超时（15s），请检查网络或使用 VPN 后重试');
+    throw new Error('网络连接失败，请检查网络或使用 VPN 后重试（'+netErr.message+')');
+  }
+  if(!r.ok) {
+    const msg=r.status===401?'Token 无效或已过期，请重新生成':r.status===403?'权限不足，Token 需要 repo 权限':r.status===404?'仓库不存在或无权访问':'GitHub 错误 '+r.status;
+    throw new Error(msg);
+  }
   return r.json();
 }
 async function ghPut(path,body,s) {
-  const r=await fetch(`https://api.github.com${path}`,{method:'PUT',headers:{'Authorization':`token ${s.token}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-  const d=await r.json();if(!r.ok)throw new Error(d.message||'GitHub '+r.status);return d;
+  let r;
+  try {
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),20000);
+    r=await fetch(`https://api.github.com${path}`,{
+      method:'PUT', signal:ctrl.signal,
+      headers:{'Authorization':`Bearer ${s.token}`,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    clearTimeout(tid);
+  } catch(netErr) {
+    if(netErr.name==='AbortError') throw new Error('上传超时（20s），请检查网络或使用 VPN 后重试');
+    throw new Error('网络连接失败，请检查网络或使用 VPN 后重试');
+  }
+  const d=await r.json();if(!r.ok)throw new Error(d.message||'GitHub 错误 '+r.status);return d;
 }
 async function getFile(path,s) {
   try{
