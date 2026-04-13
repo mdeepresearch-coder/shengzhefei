@@ -1,34 +1,48 @@
 [
   {
-    "id": "demo-001",
-    "uploadTime": "2026-04-13T10:00:00",
+    "id": "flight-1776072379775",
+    "uploadTime": "2026-04-13T09:26:19.775Z",
     "from": "上海",
     "fromCode": "PVG",
-    "to": "米兰",
+    "to": "法兰克福",
+    "toCode": "FRA",
+    "price": 5655,
+    "tripType": "往返",
+    "departDate": "2026-08-22",
+    "returnDate": "2026-09-01",
+    "image": "images/flight-1776072379775.png",
+    "ctripUrl": "https://flights.ctrip.com/online/list/round-PVG-FRA?depdate=2026-08-22&retdate=2026-09-01"
+  },
+  {
+    "id": "demo-001",
+    "uploadTime": "2026-04-13T10:00:00",
+    "from": "ä¸æµ·",
+    "fromCode": "PVG",
+    "to": "ç±³å°",
     "toCode": "MXP",
     "price": 5007,
-    "tripType": "往返",
-    "airline": "中国国航",
+    "tripType": "å¾è¿",
+    "airline": "ä¸­å½å½èª",
     "departDate": "2026-07-01",
     "returnDate": "2026-07-08",
     "image": "images/demo-shanghai-milan.jpg",
     "ctripUrl": "https://flights.ctrip.com",
-    "note": "经北京大兴中转，含23kg托运"
+    "note": "ç»åäº¬å¤§å´ä¸­è½¬ï¼å«23kgæè¿"
   },
   {
     "id": "demo-002",
     "uploadTime": "2026-04-13T09:30:00",
-    "from": "北京",
+    "from": "åäº¬",
     "fromCode": "PKX",
-    "to": "雅典",
+    "to": "éå¸",
     "toCode": "ATH",
     "price": 4046,
-    "tripType": "往返",
-    "airline": "吉祥航空",
+    "tripType": "å¾è¿",
+    "airline": "åç¥¥èªç©º",
     "departDate": "2026-07-05",
     "returnDate": "2026-07-16",
     "image": "images/demo-beijing-athens.jpg",
     "ctripUrl": "https://flights.ctrip.com",
-    "note": "经上海中转，含23kg托运，改期0元起"
+    "note": "ç»ä¸æµ·ä¸­è½¬ï¼å«23kgæè¿ï¼æ¹æ0åèµ·"
   }
 ]
