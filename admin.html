@@ -525,7 +525,9 @@ async function publish() {
     await putTxt('flights.json',JSON.stringify(flights,null,2),`add: ${g('rFrom')}→${g('rTo')} ¥${g('rPrice')}`,sha,s);
     hideProgress();
     toast(`✅ 发布成功！${g('rFrom')}→${g('rTo')} ¥${g('rPrice')}`,'ok');
-    resetAll(); loadList();
+    resetAll();
+    // 延迟 2.5s 等 GitHub 传播后再刷新列表
+    setTimeout(loadList, 2500);
   } catch(e){
     hideProgress();
     toast('发布失败：'+e.message,'err');
@@ -549,7 +551,7 @@ async function loadList() {
         ${f.image?`<img class="fli-img" src="${raw}${e(f.image)}" onerror="this.style.opacity='.3'">`:`<div style="width:52px;height:65px;background:#eee;border-radius:5px;flex-shrink:0"></div>`}
         <div class="fli-info">
           <div class="fli-route">${e(f.from)} → ${e(f.to)}</div>
-          <div class="fli-meta">${e(f.tripType||'')} · ${f.departDate||''}</div>
+          <div class="fli-meta">${e(f.tripType==='round'||f.tripType==='Round Trip'?'往返':f.tripType||'')} · ${f.departDate||''}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
           <span class="fli-price">¥${f.price}</span>
