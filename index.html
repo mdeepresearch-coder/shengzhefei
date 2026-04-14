@@ -10,26 +10,32 @@
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
         appId: "038f7aa0-03bc-4003-904e-a936b91b23df",
-        promptOptions: {
-          slidedown: {
-            prompts: [{
-              type: "push",
-              autoPrompt: true,
-              text: {
-                actionMessage: "✈ 订阅省着飞，第一时间收到低价机票推送通知！",
-                acceptButton: "订阅通知",
-                cancelButton: "暂不订阅"
-              },
-              delay: { pageViews: 1, timeDelay: 5 }
-            }]
-          }
-        },
+        // 禁用 OneSignal 自带弹框，改用下方自定义中文弹框
+        autoResubscribe: true,
         welcomeNotification: {
           title: "省着飞 ✈",
           message: "订阅成功！有低价机票时我们会第一时间通知你 🎉"
         }
       });
+      window._OS = OneSignal;
+      // 4 秒后显示自定义中文订阅弹框（未授权且未曾处理过时）
+      try {
+        const alreadyHandled = localStorage.getItem('szf_push_v1');
+        const granted = await OneSignal.Notifications.permission;
+        if(!alreadyHandled && !granted) {
+          setTimeout(() => document.getElementById('pushModal')?.classList.add('on'), 4000);
+        }
+      } catch(e) { console.warn('OneSignal check:', e); }
     });
+    async function acceptPush() {
+      document.getElementById('pushModal').classList.remove('on');
+      localStorage.setItem('szf_push_v1', '1');
+      try { await window._OS?.Notifications.requestPermission(); } catch(e) { console.warn(e); }
+    }
+    function dismissPush() {
+      document.getElementById('pushModal').classList.remove('on');
+      localStorage.setItem('szf_push_v1', '1');
+    }
   </script>
   <style>
     :root {
@@ -272,6 +278,42 @@
       z-index: 2;
     }
 
+    /* ── Push 订阅弹框 ── */
+    #pushModal {
+      display: none;
+      position: fixed; inset: 0; z-index: 10000;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(5px);
+    }
+    #pushModal.on { display: flex; }
+    .push-card {
+      background: white;
+      border-radius: 22px;
+      padding: 32px 24px 24px;
+      max-width: 320px; width: 88%;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.35);
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(24px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .push-icon  { font-size: 48px; margin-bottom: 12px; }
+    .push-title { font-size: 19px; font-weight: 800; color: #1a202c; margin-bottom: 10px; }
+    .push-desc  { font-size: 13px; color: #718096; line-height: 1.7; margin-bottom: 24px; }
+    .push-card button {
+      display: block; width: 100%; padding: 13px;
+      border: none; border-radius: 11px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: opacity .15s;
+    }
+    .push-card button:active { opacity: .8; }
+    #pushYes { background: #1a56db; color: white; margin-bottom: 10px; }
+    #pushNo  { background: #f0f4f8; color: #718096; font-size: 13px; font-weight: 600; }
+
     @media (max-width: 480px) {
       .grid { grid-template-columns: 1fr; padding: 0 12px 80px; }
       .city-name { font-size: 20px; }
@@ -280,6 +322,17 @@
   </style>
 </head>
 <body>
+
+<!-- Push 订阅引导弹框 -->
+<div id="pushModal">
+  <div class="push-card">
+    <div class="push-icon">✈️</div>
+    <div class="push-title">订阅低价机票通知</div>
+    <div class="push-desc">发现新的超低价机票时，<br>第一时间推送通知到你的手机或电脑<br>再也不错过好价格！</div>
+    <button id="pushYes" onclick="acceptPush()">🔔 立即订阅通知</button>
+    <button id="pushNo"  onclick="dismissPush()">暂不订阅</button>
+  </div>
+</div>
 
 <!-- New flight banner -->
 <div id="newBanner" onclick="dismissBanner()">

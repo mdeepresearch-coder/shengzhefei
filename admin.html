@@ -125,7 +125,8 @@
       <div class="fg"><label>GitHub Token（repo 权限）</label><input id="ghToken" type="password" placeholder="ghp_xxx" class="mono"></div>
       <div class="fg full">
         <div class="alert alert-info" style="margin-bottom:0">
-          📣 <strong>Web Push 推送已接入 OneSignal</strong>：用户访问前台网页时会弹出"允许通知"，订阅后每次发布新机票自动推送到用户手机/电脑。点"测试推送"可验证。
+          📣 <strong>Web Push 推送已接入 OneSignal</strong>：用户访问前台网页时会弹出"允许通知"，订阅后每次发布新机票自动推送到用户手机/电脑。<br>
+          ⚠️ <strong>注意</strong>：OneSignal 推送 API 在中国大陆需要 VPN 才能调用。"测试推送"按钮在无 VPN 时会提示并跳转到 OneSignal 后台手动发送。
         </div>
       </div>
     </div>
@@ -256,6 +257,7 @@
 
 <script>
 // ── 城市→IATA 对照表 ──────────────────────────────────────────────────────
+// 注意：同一代码出现多次时，靠前的条目为首选城市名（用于反查）
 const CC = {
   // 国内主要城市
   '北京':'PKX','首都机场':'PEK','大兴机场':'PKX',
@@ -296,6 +298,10 @@ const CC = {
   '奥克兰':'AKL','阿德莱德':'ADL',
 };
 
+// 反查表：IATA代码 → 首选城市名（first-occurrence-wins，城市名优先于机场名）
+const codeToCity = {};
+Object.entries(CC).forEach(([city, code]) => { if(!codeToCity[code]) codeToCity[code] = city; });
+
 function autoCode(fromId, toId) {
   const city = document.getElementById(fromId).value.trim();
   const code = CC[city] || '';
@@ -330,30 +336,50 @@ const OS_APP_ID = '038f7aa0-03bc-4003-904e-a936b91b23df';
 const OS_API_KEY = 'os_v2_app_aohxviadxraahecove3lsgzd35srdlwldiquahe6exn4hllbctbuiit3276yqqiquduhe7ozwp6w2jqu2ei5tgnawebe7amt76rq6iy';
 
 async function sendOSPush(from, to, price) {
-  const r = await fetch('https://onesignal.com/api/v1/notifications', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Key ${OS_API_KEY}`
-    },
-    body: JSON.stringify({
-      app_id: OS_APP_ID,
-      included_segments: ['Total Subscriptions'],
-      headings: { zh: '✈ 省着飞 · 新低价机票', en: '✈ 省着飞 · New Deal' },
-      contents: { zh: `${from} → ${to}  ¥${price}/人，点击查看详情 →`, en: `${from} → ${to} ¥${price}` },
-      url: 'https://mdeepresearch-coder.github.io/shengzhefei/',
-      chrome_web_icon: 'https://mdeepresearch-coder.github.io/shengzhefei/icon.png',
-    })
-  });
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 10000);
+  let r;
+  try {
+    r = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Key ${OS_API_KEY}`
+      },
+      body: JSON.stringify({
+        app_id: OS_APP_ID,
+        included_segments: ['Total Subscriptions'],
+        headings: { zh: '✈ 省着飞 · 新低价机票', en: '✈ 省着飞 · New Deal' },
+        contents: { zh: `${from} → ${to}  ¥${price}/人，点击查看详情 →`, en: `${from} → ${to} ¥${price}` },
+        url: 'https://mdeepresearch-coder.github.io/shengzhefei/',
+        chrome_web_icon: 'https://mdeepresearch-coder.github.io/shengzhefei/icon.png',
+      })
+    });
+  } finally { clearTimeout(tid); }
   const d = await r.json();
   if(!r.ok) throw new Error(d.errors?.[0] || 'OneSignal ' + r.status);
   return d;
 }
 async function testNtfy() {
+  // OneSignal REST API 在中国大陆可能被屏蔽，需使用 VPN 才能调用
   try {
     await sendOSPush('上海','巴黎','4999（测试）');
-    toast('推送已发送！请检查已订阅的设备','ok');
-  } catch(e){toast('推送失败：'+e.message,'err');}
+    toast('✅ 推送已发送！请检查已订阅设备','ok');
+  } catch(e) {
+    const isBlocked = e.name==='AbortError' || e.message.toLowerCase().includes('fetch') || e.message.toLowerCase().includes('network');
+    if(isBlocked) {
+      // 网络被屏蔽，引导用户到 OneSignal 后台手动发送
+      toast('推送 API 在国内被屏蔽，请用 VPN 或去 OneSignal 后台手动发送', 'err');
+      setTimeout(() => {
+        if(confirm('推送 API 被屏蔽（需 VPN）。\n\n点确定打开 OneSignal 后台，可在那里手动发送推送。')) {
+          window.open('https://dashboard.onesignal.com/apps/' + OS_APP_ID + '/push', '_blank');
+        }
+      }, 500);
+    } else {
+      toast('推送失败：' + e.message, 'err');
+    }
+  }
 }
 
 // 读取配置：优先表单当前值，回退到 localStorage
@@ -398,7 +424,7 @@ function onFile(file) {
 // ── Analysis ──────────────────────────────────────────────────────────────
 const TODAY = new Date().toISOString().slice(0,10);
 const PROMPT = `这是从机票截图提取的内容。今天${TODAY}。只返回JSON，不加任何说明：
-{"from":"出发城市中文","fromCode":"IATA大写3字母","to":"目的城市中文","toCode":"IATA大写","price":数字仅数字,"tripType":"往返或单程","departDate":"YYYY-MM-DD","returnDate":"YYYY-MM-DD或null"}`;
+{"from":"出发城市中文名（只写城市如北京、上海，禁止写机场名如大兴机场、马尔彭萨）","fromCode":"IATA大写3字母","to":"目的城市中文名（只写城市如米兰、伦敦，禁止写机场名）","toCode":"IATA大写","price":数字仅数字,"tripType":"往返或单程","departDate":"YYYY-MM-DD","returnDate":"YYYY-MM-DD或null"}`;
 
 async function analyze() {
   const s = readCfg();
@@ -501,8 +527,8 @@ function fillFromOCR(text) {
   const priceM=text.match(/[¥￥][\s]?(\d{3,5})/);
   if(priceM) $$('rPrice').value=priceM[1];
   const codes=[...text.matchAll(/\b([A-Z]{3})\b/g)].map(m=>m[1]).filter(c=>Object.values(CC).includes(c));
-  if(codes[0]) { $$('rFromCode').value=codes[0]; Object.entries(CC).forEach(([cn,code])=>{if(code===codes[0])$$('rFrom').value=cn;}); }
-  if(codes[1]) { $$('rToCode').value=codes[1];   Object.entries(CC).forEach(([cn,code])=>{if(code===codes[1])$$('rTo').value=cn;}); }
+  if(codes[0]) { $$('rFromCode').value=codes[0]; $$('rFrom').value=codeToCity[codes[0]]||codes[0]; }
+  if(codes[1]) { $$('rToCode').value=codes[1];   $$('rTo').value=codeToCity[codes[1]]||codes[1]; }
   const yr=new Date().getFullYear();
   const dates=[...text.matchAll(/(\d{2})-(\d{2})/g)];
   if(dates[0]) $$('rDep').value=`${yr}-${dates[0][1]}-${dates[0][2]}`;
@@ -513,10 +539,15 @@ function fillFromOCR(text) {
 
 function fillFields(info) {
   if(!info)return;
-  $$('rFrom').value    = info.from    ||'';
-  $$('rFromCode').value= (info.fromCode||CC[info.from]||'').toUpperCase();
-  $$('rTo').value      = info.to      ||'';
-  $$('rToCode').value  = (info.toCode ||CC[info.to]  ||'').toUpperCase();
+  const fromCode = (info.fromCode || CC[info.from] || '').toUpperCase();
+  const toCode   = (info.toCode   || CC[info.to]   || '').toUpperCase();
+  // 用 IATA 代码反查首选城市名，避免 AI 返回机场名（如"大兴机场"→"北京"，"马尔彭萨"→"米兰"）
+  const from = (fromCode && codeToCity[fromCode]) ? codeToCity[fromCode] : (info.from || '');
+  const to   = (toCode   && codeToCity[toCode])   ? codeToCity[toCode]   : (info.to   || '');
+  $$('rFrom').value    = from;
+  $$('rFromCode').value= fromCode;
+  $$('rTo').value      = to;
+  $$('rToCode').value  = toCode;
   $$('rPrice').value   = info.price   ||'';
   $$('rType').value    = info.tripType==='单程'?'单程':'往返';
   $$('rDep').value     = info.departDate||'';
