@@ -1,5 +1,19 @@
 [
   {
+    "id": "flight-1776169669729",
+    "uploadTime": "2026-04-14T12:27:49.729Z",
+    "from": "上海",
+    "fromCode": "PVG",
+    "to": "米兰",
+    "toCode": "MXP",
+    "price": 5007,
+    "tripType": "往返",
+    "departDate": "2026-07-01",
+    "returnDate": "2026-07-08",
+    "image": "images/flight-1776169669729.png",
+    "ctripUrl": "https://flights.ctrip.com/online/list/round-PVG-MXP?depdate=2026-07-01_2026-07-08"
+  },
+  {
     "id": "flight-1776169313988",
     "uploadTime": "2026-04-14T12:21:53.988Z",
     "from": "北京",
