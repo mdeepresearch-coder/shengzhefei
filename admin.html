@@ -93,7 +93,18 @@
     .fli-meta{font-size:12px;color:var(--muted);margin-top:2px;}
     .fli-price{font-size:17px;font-weight:800;color:var(--danger);flex-shrink:0;}
 
-    @media(max-width:500px){.g2,.r2{grid-template-columns:1fr;}.fg.full{grid-column:1;}.rl{grid-template-columns:1fr;}.rthumb{width:100%;}}
+    @media(max-width:500px){
+      .g2,.r2{grid-template-columns:1fr;}
+      .fg.full{grid-column:1;}
+      .rl{grid-template-columns:1fr;}
+      .rthumb{width:100%;}
+      .wrap{padding:12px 10px 80px;}
+      .sec{padding:14px 12px;}
+      .tabs .tab{font-size:11px;padding:8px 2px;}
+      input,select{font-size:16px;} /* 防止iOS自动缩放 */
+      .btn{padding:12px 16px;font-size:14px;} /* 更易点击 */
+      .dz{padding:28px 16px;}
+    }
   </style>
 </head>
 <body>
@@ -163,6 +174,7 @@
         <input type="file" id="imgFile" accept="image/*" style="display:none" onchange="onFile(this.files[0])">
         <div class="icon">🖼</div>
         <div class="t">点击选择 / 拖入截图</div>
+        <div class="s" style="margin-top:2px;color:#4a90e2;font-size:11px">手机端：直接从相册选图 📱</div>
         <div class="s">或直接 <kbd>⌘V</kbd> 粘贴，自动识别信息</div>
       </div>
     </div>
@@ -481,9 +493,10 @@ function ctripUrl() {
   const t=$$('rToCode').value.toUpperCase()||CC[g('rTo')]||'';
   const dep=g('rDep'),ret=g('rRet'),type=g('rType');
   if(!f||!t||!dep)return'';
+  // 携程正确格式：/online/list/round-FROM-TO?depdate=YYYY-MM-DD_YYYY-MM-DD
   return type==='往返'&&ret
-    ?`https://flights.ctrip.com/international/search/round-${f}-${t}?depDate=${dep}&retDate=${ret}`
-    :`https://flights.ctrip.com/international/search/oneway-${f}-${t}?depDate=${dep}`;
+    ?`https://flights.ctrip.com/online/list/round-${f}-${t}?depdate=${dep}_${ret}`
+    :`https://flights.ctrip.com/online/list/oneway-${f}-${t}?depdate=${dep}`;
 }
 function updUrl(){$$('urlPrev').textContent=ctripUrl()||'请填写城市和出发日期…';}
 

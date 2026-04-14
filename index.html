@@ -219,6 +219,32 @@
       font-size: 11px; color: var(--muted);
     }
 
+    /* ── New banner ── */
+    #newBanner {
+      display: none;
+      background: linear-gradient(90deg, #38a169, #2f855a);
+      color: white;
+      text-align: center;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      position: sticky; top: 0; z-index: 100;
+    }
+    #newBanner span { margin-left: 6px; text-decoration: underline; font-size: 12px; opacity: .85; }
+
+    /* ── New badge on card ── */
+    .card-img-wrap { position: relative; }
+    .new-badge {
+      position: absolute; top: 10px; left: 10px;
+      background: #e53e3e; color: white;
+      font-size: 11px; font-weight: 800;
+      padding: 2px 8px; border-radius: 99px;
+      letter-spacing: .5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      z-index: 2;
+    }
+
     @media (max-width: 480px) {
       .grid { grid-template-columns: 1fr; padding: 0 12px 80px; }
       .city-name { font-size: 20px; }
@@ -227,6 +253,11 @@
   </style>
 </head>
 <body>
+
+<!-- New flight banner -->
+<div id="newBanner" onclick="dismissBanner()">
+  🆕 <strong id="newCount"></strong> 条新低价机票！<span>点击关闭</span>
+</div>
 
 <!-- Lightbox -->
 <div id="lb" onclick="closeLb()">
@@ -256,6 +287,8 @@
   let all = [];
   let cur = 'all';
 
+  const LAST_VISIT_KEY = 'szf_last_visit';
+
   async function load() {
     if (location.protocol === 'file:') {
       grid().innerHTML = `<div class="empty">
@@ -270,11 +303,30 @@
       if (!r.ok) throw new Error('HTTP ' + r.status);
       all = await r.json();
       all.sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+      checkNew();
       buildFilters();
       render(all);
+      // 记录本次访问时间（延迟1s，确保先展示完内容）
+      setTimeout(() => localStorage.setItem(LAST_VISIT_KEY, new Date().toISOString()), 1000);
     } catch (e) {
       grid().innerHTML = `<div class="empty"><div class="icon">😕</div><p>数据加载失败（${e.message}），请刷新重试</p></div>`;
     }
+  }
+
+  function checkNew() {
+    const last = localStorage.getItem(LAST_VISIT_KEY);
+    if (!last) return; // 第一次访问不提示
+    const lastDate = new Date(last);
+    const newItems = all.filter(f => new Date(f.uploadTime) > lastDate);
+    if (!newItems.length) return;
+    document.getElementById('newCount').textContent = newItems.length;
+    document.getElementById('newBanner').style.display = 'block';
+    // 记录哪些是新的，render时加角标
+    window._newIds = new Set(newItems.map(f => f.id));
+  }
+
+  function dismissBanner() {
+    document.getElementById('newBanner').style.display = 'none';
   }
 
   function buildFilters() {
@@ -308,9 +360,10 @@
              onclick="event.preventDefault();event.stopPropagation();openLb(this.src)"
              onerror="this.parentElement.innerHTML='<div class=card-img-ph>✈️</div>'">`
         : `<div class="card-img-ph">✈️</div>`;
+      const isNew = window._newIds?.has(f.id);
       const imgWrap = f.image
-        ? `<div class="card-img-wrap">${imgHtml}<span class="zoom-hint">🔍 点击放大</span></div>`
-        : `<div class="card-img-wrap">${imgHtml}</div>`;
+        ? `<div class="card-img-wrap">${isNew ? '<span class="new-badge">NEW</span>' : ''}${imgHtml}<span class="zoom-hint">🔍 点击放大</span></div>`
+        : `<div class="card-img-wrap">${isNew ? '<span class="new-badge">NEW</span>' : ''}${imgHtml}</div>`;
 
       return `<a class="card" href="${e(f.ctripUrl || '#')}" target="_blank" rel="noopener">
         ${imgWrap}

@@ -11,7 +11,7 @@
     "departDate": "2026-05-18",
     "returnDate": "2026-05-25",
     "image": "images/flight-1776073472678.png",
-    "ctripUrl": "https://flights.ctrip.com/international/search/round-PKX-SYD?depDate=2026-05-18&retDate=2026-05-25"
+    "ctripUrl": "https://flights.ctrip.com/online/list/round-PKX-SYD?depdate=2026-05-18_2026-05-25"
   },
   {
     "id": "flight-1776072446600",
@@ -25,6 +25,6 @@
     "departDate": "2026-08-22",
     "returnDate": "2026-09-01",
     "image": "images/flight-1776072446600.png",
-    "ctripUrl": "https://flights.ctrip.com/international/search/round-PVG-FRA?depDate=2026-08-22&retDate=2026-09-01"
+    "ctripUrl": "https://flights.ctrip.com/online/list/round-PVG-FRA?depdate=2026-08-22_2026-09-01"
   }
 ]
