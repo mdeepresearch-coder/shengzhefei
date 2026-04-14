@@ -4,6 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>省着飞 ✈ 低价机票发现</title>
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "038f7aa0-03bc-4003-904e-a936b91b23df",
+        promptOptions: {
+          slidedown: {
+            prompts: [{
+              type: "push",
+              autoPrompt: true,
+              text: {
+                actionMessage: "✈ 订阅省着飞，第一时间收到低价机票推送通知！",
+                acceptButton: "订阅通知",
+                cancelButton: "暂不订阅"
+              },
+              delay: { pageViews: 1, timeDelay: 5 }
+            }]
+          }
+        },
+        welcomeNotification: {
+          title: "省着飞 ✈",
+          message: "订阅成功！有低价机票时我们会第一时间通知你 🎉"
+        }
+      });
+    });
+  </script>
   <style>
     :root {
       --bg:      #f0f4f8;

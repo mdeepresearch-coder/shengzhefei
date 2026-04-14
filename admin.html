@@ -124,8 +124,9 @@
       <div class="fg"><label>分支</label><input id="ghBranch" value="main"></div>
       <div class="fg"><label>GitHub Token（repo 权限）</label><input id="ghToken" type="password" placeholder="ghp_xxx" class="mono"></div>
       <div class="fg full">
-        <label>推送通知主题（ntfy.sh · 可选）<a href="https://ntfy.sh" target="_blank" style="color:var(--primary);font-size:10px;margin-left:6px">什么是 ntfy？</a></label>
-        <input id="ntfyTopic" placeholder="例如 szf-abc123（自定义唯一字符串，用户订阅同一主题收通知）" class="mono">
+        <div class="alert alert-info" style="margin-bottom:0">
+          📣 <strong>Web Push 推送已接入 OneSignal</strong>：用户访问前台网页时会弹出"允许通知"，订阅后每次发布新机票自动推送到用户手机/电脑。点"测试推送"可验证。
+        </div>
       </div>
     </div>
     <div class="btn-row">
@@ -310,14 +311,13 @@ function saveSettings() {
   localStorage.setItem(SKEY, JSON.stringify({
     owner: g('ghOwner'), repo: g('ghRepo'), branch: g('ghBranch')||'main',
     token: g('ghToken'), geminiKey: g('geminiKey'), deepseekKey: g('deepseekKey'),
-    ntfyTopic: g('ntfyTopic'),
   }));
   toast('设置已保存', 'ok');
 }
 function cfg() { try{return JSON.parse(localStorage.getItem(SKEY)||'{}');}catch(e){return{};} }
 function loadSettings() {
   const s=cfg();
-  const map={ghOwner:'owner',ghRepo:'repo',ghBranch:'branch',ghToken:'token',geminiKey:'geminiKey',deepseekKey:'deepseekKey',ntfyTopic:'ntfyTopic'};
+  const map={ghOwner:'owner',ghRepo:'repo',ghBranch:'branch',ghToken:'token',geminiKey:'geminiKey',deepseekKey:'deepseekKey'};
   Object.entries(map).forEach(([domId,key])=>{ if(s[key]) $$(domId).value=s[key]; });
 }
 async function testGH() {
@@ -326,24 +326,33 @@ async function testGH() {
   try{const r=await ghGet(`/repos/${owner}/${repo}`);toast(`连接成功：${r.full_name}`,'ok');}
   catch(e){toast('连接失败：'+e.message,'err');}
 }
-async function sendNtfy(topic, from, to, price) {
-  await fetch(`https://ntfy.sh/${topic}`, {
-    method:'POST',
-    headers:{
-      'Title': '✈ 省着飞 · 新低价机票',
-      'Priority': 'high',
-      'Tags': 'airplane,money_with_wings',
-      'Click': 'https://mdeepresearch-coder.github.io/shengzhefei/',
+const OS_APP_ID = '038f7aa0-03bc-4003-904e-a936b91b23df';
+const OS_API_KEY = 'os_v2_app_aohxviadxraahecove3lsgzd35srdlwldiquahe6exn4hllbctbuiit3276yqqiquduhe7ozwp6w2jqu2ei5tgnawebe7amt76rq6iy';
+
+async function sendOSPush(from, to, price) {
+  const r = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Key ${OS_API_KEY}`
     },
-    body: `${from} → ${to}  ¥${price}/人\n点击查看详情并预订 →`,
+    body: JSON.stringify({
+      app_id: OS_APP_ID,
+      included_segments: ['Total Subscriptions'],
+      headings: { zh: '✈ 省着飞 · 新低价机票', en: '✈ 省着飞 · New Deal' },
+      contents: { zh: `${from} → ${to}  ¥${price}/人，点击查看详情 →`, en: `${from} → ${to} ¥${price}` },
+      url: 'https://mdeepresearch-coder.github.io/shengzhefei/',
+      chrome_web_icon: 'https://mdeepresearch-coder.github.io/shengzhefei/icon.png',
+    })
   });
+  const d = await r.json();
+  if(!r.ok) throw new Error(d.errors?.[0] || 'OneSignal ' + r.status);
+  return d;
 }
 async function testNtfy() {
-  const {ntfyTopic}=readCfg();
-  if(!ntfyTopic){toast('请先填写推送主题','err');return;}
   try {
-    await sendNtfy(ntfyTopic,'上海','巴黎','4999（测试）');
-    toast('推送已发送，请检查手机通知','ok');
+    await sendOSPush('上海','巴黎','4999（测试）');
+    toast('推送已发送！请检查已订阅的设备','ok');
   } catch(e){toast('推送失败：'+e.message,'err');}
 }
 
@@ -357,7 +366,6 @@ function readCfg() {
     token:  g('ghToken')      || s.token  || '',
     geminiKey:   g('geminiKey')    || s.geminiKey    || '',
     deepseekKey: g('deepseekKey')  || s.deepseekKey  || '',
-    ntfyTopic:   g('ntfyTopic')    || s.ntfyTopic    || '',
   };
 }
 
@@ -573,8 +581,8 @@ async function publish() {
     await putTxt('flights.json',JSON.stringify(flights,null,2),`add: ${fromCity}→${toCity} ¥${price}`,sha,s);
     hideProgress();
     toast(`✅ 发布成功！${fromCity}→${toCity} ¥${price}`,'ok');
-    // ntfy 推送通知
-    if(s.ntfyTopic) sendNtfy(s.ntfyTopic, fromCity, toCity, price).catch(()=>{});
+    // OneSignal 推送通知（后台异步，不影响发布流程）
+    sendOSPush(fromCity, toCity, price).catch(e=>console.warn('推送失败:', e));
     resetAll();
     // 延迟 3s 等 GitHub 传播后再刷新列表
     setTimeout(loadList, 3000);
