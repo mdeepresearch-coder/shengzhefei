@@ -10,8 +10,8 @@
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
         appId: "038f7aa0-03bc-4003-904e-a936b91b23df",
-        // 禁用 OneSignal 自带弹框，改用下方自定义中文弹框
-        autoResubscribe: true,
+        // 禁用 OneSignal 所有自带弹框，改用下方自定义中文弹框
+        notifyButton: { enable: false },
         welcomeNotification: {
           title: "省着飞 ✈",
           message: "订阅成功！有低价机票时我们会第一时间通知你 🎉"
@@ -277,6 +277,12 @@
       box-shadow: 0 2px 6px rgba(0,0,0,.25);
       z-index: 2;
     }
+
+    /* 隐藏 OneSignal 自带英文弹框，只用我们自己的中文弹框 */
+    #onesignal-slidedown-container,
+    .onesignal-slidedown-container,
+    #onesignal-bell-container,
+    .onesignal-bell-container-bottom-right { display: none !important; }
 
     /* ── Push 订阅弹框 ── */
     #pushModal {

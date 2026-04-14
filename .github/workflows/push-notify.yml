@@ -1,0 +1,19 @@
+name: 发布机票推送通知
+
+# 每次 flights.json 有新内容推送到 main 分支时自动触发
+on:
+  push:
+    paths:
+      - 'flights.json'
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 发送 OneSignal 推送
+        run: python3 scripts/send_push.py

@@ -125,15 +125,15 @@
       <div class="fg"><label>GitHub Token（repo 权限）</label><input id="ghToken" type="password" placeholder="ghp_xxx" class="mono"></div>
       <div class="fg full">
         <div class="alert alert-info" style="margin-bottom:0">
-          📣 <strong>Web Push 推送已接入 OneSignal</strong>：用户访问前台网页时会弹出"允许通知"，订阅后每次发布新机票自动推送到用户手机/电脑。<br>
-          ⚠️ <strong>注意</strong>：OneSignal 推送 API 在中国大陆需要 VPN 才能调用。"测试推送"按钮在无 VPN 时会提示并跳转到 OneSignal 后台手动发送。
+          📣 <strong>Web Push 推送已接入</strong>：用户访问前台网页会弹出中文订阅提示，订阅后每次你发布新机票，<strong>GitHub Actions 自动发送推送</strong>（无需 VPN，完全免费）。<br>
+          点"查看推送日志"可确认每次推送是否成功。
         </div>
       </div>
     </div>
     <div class="btn-row">
       <button class="btn btn-p btn-sm" onclick="saveSettings()">保存设置</button>
       <button class="btn btn-g btn-sm" onclick="testGH()">测试连接</button>
-      <button class="btn btn-g btn-sm" onclick="testNtfy()">测试推送</button>
+      <button class="btn btn-g btn-sm" onclick="window.open('https://github.com/mdeepresearch-coder/shengzhefei/actions','_blank')">查看推送日志</button>
     </div>
   </div>
 
