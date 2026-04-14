@@ -442,24 +442,29 @@ async function analyzeGemini(key) {
 
 // OCR + DeepSeek：先本地 OCR，再 DeepSeek 解析文字
 async function analyzeOCR(dsKey) {
-  // Step 1: Tesseract OCR（懒加载）
+  // Step 1: Tesseract OCR（懒加载，兼容 v2/v4/v5 API）
   setLoadMsg('加载 OCR 引擎…','首次使用需下载约 10MB，请稍候');
   if(!window.Tesseract) {
-    await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
   }
   setLoadMsg('本地 OCR 识别中…','');
   let ocrText='';
   try {
-    const worker=await Tesseract.createWorker('chi_sim+eng',1,{logger:m=>{
-      if(m.status==='recognizing text') setLoadMsg('本地 OCR 识别中…',`${Math.round(m.progress*100)}%`);
-    }});
-    const {data:{text}}=await worker.recognize(dataUrl);
+    // Tesseract.js v5 API
+    const worker = await Tesseract.createWorker(['chi_sim','eng'], 1, {
+      logger: m => {
+        if(m.status==='recognizing text')
+          setLoadMsg('本地 OCR 识别中…', Math.round((m.progress||0)*100)+'%');
+      }
+    });
+    const result = await worker.recognize(dataUrl);
     await worker.terminate();
-    ocrText=text;
-  } catch(e) {
-    throw new Error('OCR 失败：'+e.message);
+    ocrText = result?.data?.text || '';
+  } catch(err) {
+    const msg = (err && (err.message || String(err))) || '未知错误';
+    throw new Error('OCR 失败：' + msg);
   }
-  if(!ocrText.trim()) throw new Error('OCR 未识别到文字，请检查图片');
+  if(!ocrText.trim()) throw new Error('OCR 未识别到文字，请检查图片是否清晰');
 
   // Step 2: DeepSeek 解析文字
   if(!dsKey) {
