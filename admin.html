@@ -301,6 +301,13 @@ const CC = {
 // 反查表：IATA代码 → 首选城市名（first-occurrence-wins，城市名优先于机场名）
 const codeToCity = {};
 Object.entries(CC).forEach(([city, code]) => { if(!codeToCity[code]) codeToCity[code] = city; });
+// 同城多机场修正：机场代码统一指向城市名，而非机场名
+Object.assign(codeToCity, {
+  'SHA':'上海',  // 虹桥机场 → 上海
+  'PEK':'北京',  // 首都机场 → 北京
+  'HND':'东京',  // 羽田机场 → 东京
+  'ITM':'大阪',  // 伊丹机场 → 大阪
+});
 
 function autoCode(fromId, toId) {
   const city = document.getElementById(fromId).value.trim();
@@ -423,19 +430,18 @@ function onFile(file) {
 
 // ── Analysis ──────────────────────────────────────────────────────────────
 const TODAY = new Date().toISOString().slice(0,10);
-const PROMPT = `这是机票APP截图提取的内容。今天${TODAY}。按以下规则提取，每条规则非常重要：
+const YR = new Date().getFullYear();
+const PROMPT = `机票截图信息提取。今天${TODAY}。
 
-1. from（出发城市）= 去程第一行起飞的机场所在城市。截图中机场前有IATA代码（3位大写字母），如 SHA=上海、PVG=上海、PKX=北京、PEK=北京、CAN=广州、CTU=成都。取去程第一行的IATA代码对应城市。
-2. fromCode = 去程第一行的IATA代码（直接从图中读取，非常准确）。
-3. to（目的城市）= 去程最后到达的城市（忽略所有中转城市）。如去程是 SHA→CAN（中转）→FRA，则to=法兰克福，toCode=FRA。中转城市绝对不是目的地。
-4. toCode = 去程最后到达机场的IATA代码。
-5. departDate = 图中"去程"标签旁边的日期，格式补全为 ${new Date().getFullYear()}-MM-DD。
-6. returnDate = 图中"返程"标签旁边的日期，格式补全为 ${new Date().getFullYear()}-MM-DD。没有返程则填null。
-7. price = 图片底部最大最醒目的¥价格数字（通常标注"往返总价"或"含税"），只取数字。
-8. 城市名只写城市（如上海、法兰克福），禁止写机场名（如虹桥机场、法兰克福机场）。
+【提取规则】
+from/fromCode：去程第一行起飞机场的IATA代码和城市。SHA=上海,PVG=上海,PKX=北京,PEK=北京,CAN=广州,CTU=成都,SHA=上海
+to/toCode：去程最后一行到达机场的IATA代码和城市（绝对不是中转城市）。例如去程 SHA→CAN中转→FRA，则to=法兰克福,toCode=FRA
+departDate："去程"标签后面的日期，补全为${YR}-MM-DD格式
+returnDate："返程"标签后面的日期，补全为${YR}-MM-DD格式，无返程填null
+price：图片底部最大¥数字（往返总价），只取数字
+from/to城市名只写城市（上海、法兰克福），禁止写机场名
 
-只返回JSON，不加任何说明：
-{"from":"出发城市","fromCode":"IATA大写3字母","to":"目的城市（非中转）","toCode":"IATA大写","price":数字仅数字,"tripType":"往返或单程","departDate":"YYYY-MM-DD","returnDate":"YYYY-MM-DD或null"}`;
+只返回JSON不加说明：{"from":"城市","fromCode":"IATA","to":"城市","toCode":"IATA","price":数字,"tripType":"往返或单程","departDate":"${YR}-MM-DD","returnDate":"${YR}-MM-DD或null"}`;
 
 async function analyze() {
   const s = readCfg();
@@ -522,7 +528,7 @@ async function analyzeOCR(dsKey) {
     headers:{'Authorization':`Bearer ${dsKey}`,'Content-Type':'application/json'},
     body:JSON.stringify({
       model:'deepseek-chat',
-      messages:[{role:'user',content:`以下是从机票截图OCR提取的文字，今天${TODAY}，请解析出航班信息。只返回JSON：\n${ocrText}\n\n${PROMPT}`}],
+      messages:[{role:'user',content:`${PROMPT}\n\n【OCR原文】\n${ocrText}`}],
       stream:false
     })
   });
