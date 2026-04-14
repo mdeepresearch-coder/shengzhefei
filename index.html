@@ -93,10 +93,10 @@
     /* ── Grid ── */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 16px;
       padding: 0 16px 80px;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
@@ -252,19 +252,53 @@
       font-size: 11px; color: var(--muted);
     }
 
-    /* ── New banner ── */
-    #newBanner {
+    /* ── 浮动新机票胶囊通知 ── */
+    #newPill {
       display: none;
-      background: linear-gradient(90deg, #38a169, #2f855a);
+      position: fixed;
+      top: 16px; left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #38a169, #276749);
       color: white;
-      text-align: center;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 600;
+      padding: 9px 20px;
+      border-radius: 99px;
+      font-size: 13px; font-weight: 700;
+      z-index: 500;
+      box-shadow: 0 4px 20px rgba(56,161,105,.5);
       cursor: pointer;
-      position: sticky; top: 0; z-index: 100;
+      white-space: nowrap;
+      animation: pillIn .35s cubic-bezier(.34,1.56,.64,1);
     }
-    #newBanner span { margin-left: 6px; text-decoration: underline; font-size: 12px; opacity: .85; }
+    #newPill.on { display: block; }
+    @keyframes pillIn {
+      from { opacity:0; transform:translateX(-50%) translateY(-16px) scale(.88); }
+      to   { opacity:1; transform:translateX(-50%) translateY(0)      scale(1);  }
+    }
+
+    /* ── 底部自动更新 toast ── */
+    #updateToast {
+      position: fixed;
+      bottom: 64px; left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: #1a202c; color: white;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 600;
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s, transform .3s;
+      white-space: nowrap;
+    }
+    #updateToast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── 新卡片入场动画 ── */
+    @keyframes newCardIn {
+      0%   { opacity:0; transform:translateY(-14px); outline: 2px solid #38a169; outline-offset:2px; }
+      50%  { outline: 2px solid #38a169; outline-offset:2px; }
+      100% { opacity:1; transform:translateY(0);     outline: 2px solid transparent; }
+    }
+    .card.is-new { animation: newCardIn .55s ease forwards; }
 
     /* ── New badge on card ── */
     .card-img-wrap { position: relative; }
@@ -340,10 +374,12 @@
   </div>
 </div>
 
-<!-- New flight banner -->
-<div id="newBanner" onclick="dismissBanner()">
-  🆕 <strong id="newCount"></strong> 条新低价机票！<span>点击关闭</span>
+<!-- 浮动新机票胶囊 -->
+<div id="newPill" onclick="dismissPill()">
+  🆕 <span id="pillCount"></span> 条新低价机票 &nbsp;✕
 </div>
+<!-- 自动更新 toast -->
+<div id="updateToast"></div>
 
 <!-- Lightbox -->
 <div id="lb" onclick="closeLb()">
@@ -394,6 +430,8 @@
       render(all);
       // 记录本次访问时间（延迟1s，确保先展示完内容）
       setTimeout(() => localStorage.setItem(LAST_VISIT_KEY, new Date().toISOString()), 1000);
+      // 启动自动轮询（用户留在页面时每60秒检查新机票）
+      startPolling();
     } catch (e) {
       grid().innerHTML = `<div class="empty"><div class="icon">😕</div><p>数据加载失败（${e.message}），请刷新重试</p></div>`;
     }
@@ -401,30 +439,63 @@
 
   function checkNew() {
     const last = localStorage.getItem(LAST_VISIT_KEY);
-    if (!last) return; // 第一次访问不提示
+    if (!last) return;
     const lastDate = new Date(last);
     const newItems = all.filter(f => new Date(f.uploadTime) > lastDate);
     if (!newItems.length) return;
-    document.getElementById('newCount').textContent = newItems.length;
-    document.getElementById('newBanner').style.display = 'block';
-    // 记录哪些是新的，render时加角标
     window._newIds = new Set(newItems.map(f => f.id));
+    // 显示浮动胶囊，5秒后自动消失
+    const pill = document.getElementById('newPill');
+    document.getElementById('pillCount').textContent = newItems.length;
+    pill.classList.add('on');
+    setTimeout(() => pill.classList.remove('on'), 6000);
   }
 
-  function dismissBanner() {
-    document.getElementById('newBanner').style.display = 'none';
+  function dismissPill() {
+    document.getElementById('newPill').classList.remove('on');
+  }
+
+  function showUpdateToast(count) {
+    const el = document.getElementById('updateToast');
+    el.textContent = `✅ 已自动更新 ${count} 条新低价机票`;
+    el.classList.add('on');
+    setTimeout(() => el.classList.remove('on'), 4000);
   }
 
   function buildFilters() {
     const bar = document.getElementById('filterBar');
+    // 每次重建，避免重复（保留"全部"按钮）
+    bar.querySelectorAll('.filter-btn:not([data-filter="all"])').forEach(b => b.remove());
     [...new Set(all.map(f => f.to))].forEach(dest => {
       const b = document.createElement('button');
-      b.className = 'filter-btn';
+      b.className = 'filter-btn' + (dest === cur ? ' active' : '');
       b.dataset.filter = dest;
       b.textContent = dest;
       b.onclick = () => setFilter(dest);
       bar.appendChild(b);
     });
+  }
+
+  // 每 60 秒轮询，用户在页面时自动更新
+  function startPolling() {
+    setInterval(async () => {
+      try {
+        const r = await fetch('./flights.json?t=' + Date.now());
+        if (!r.ok) return;
+        const fresh = await r.json();
+        fresh.sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+        const oldIds = new Set(all.map(f => f.id));
+        const added = fresh.filter(f => !oldIds.has(f.id));
+        if (!added.length) return;
+        all = fresh;
+        window._newIds = new Set([...(window._newIds || new Set()), ...added.map(f => f.id)]);
+        buildFilters();
+        render(cur === 'all' ? all : all.filter(x => x.to === cur));
+        showUpdateToast(added.length);
+        // 更新"本次访问时间"，让下次返回时计算准确
+        localStorage.setItem(LAST_VISIT_KEY, new Date().toISOString());
+      } catch(e) { /* 静默忽略网络错误 */ }
+    }, 60000);
   }
 
   function setFilter(f) {
@@ -451,7 +522,7 @@
         ? `<div class="card-img-wrap">${isNew ? '<span class="new-badge">NEW</span>' : ''}${imgHtml}<span class="zoom-hint">🔍 点击放大</span></div>`
         : `<div class="card-img-wrap">${isNew ? '<span class="new-badge">NEW</span>' : ''}${imgHtml}</div>`;
 
-      return `<a class="card" href="${e(f.ctripUrl || '#')}" target="_blank" rel="noopener">
+      return `<a class="card${isNew ? ' is-new' : ''}" href="${e(f.ctripUrl || '#')}" target="_blank" rel="noopener">
         ${imgWrap}
         <div class="card-info">
           <div class="route-line">

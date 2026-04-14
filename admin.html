@@ -423,8 +423,16 @@ function onFile(file) {
 
 // ── Analysis ──────────────────────────────────────────────────────────────
 const TODAY = new Date().toISOString().slice(0,10);
-const PROMPT = `这是从机票截图提取的内容。今天${TODAY}。只返回JSON，不加任何说明：
-{"from":"出发城市中文名（只写城市如北京、上海，禁止写机场名如大兴机场、马尔彭萨）","fromCode":"IATA大写3字母","to":"目的城市中文名（只写城市如米兰、伦敦，禁止写机场名）","toCode":"IATA大写","price":数字仅数字,"tripType":"往返或单程","departDate":"YYYY-MM-DD","returnDate":"YYYY-MM-DD或null"}`;
+const PROMPT = `这是从机票截图提取的内容。今天${TODAY}。
+关键规则（中转航班特别注意）：
+1. from = 整个行程第一个起飞城市（如上海），绝对不能是中转城市
+2. to = 整个行程最终目的城市（如米兰），绝对不能是中转城市（如北京）
+3. price = 页面底部最大最醒目的含税总价，不是单段价格
+4. departDate = 去程第一班飞机出发日期
+5. returnDate = 往返时返程出发日期，单程填null
+6. 城市名只写城市（如上海、米兰），禁止写机场名（如大兴机场、马尔彭萨）
+只返回JSON，不加任何说明：
+{"from":"出发城市","fromCode":"IATA大写3字母","to":"最终目的地城市","toCode":"IATA大写","price":数字仅数字,"tripType":"往返或单程","departDate":"YYYY-MM-DD","returnDate":"YYYY-MM-DD或null"}`;
 
 async function analyze() {
   const s = readCfg();
