@@ -412,6 +412,18 @@
   }
   document.addEventListener('keydown', e => { if(e.key==='Escape') closeLb(); });
 
+  // 统计：点击预订按钮
+  document.addEventListener('click', ev => {
+    const card = ev.target.closest('a.card');
+    if (!card) return;
+    const from = card.querySelector('.city-name')?.textContent || '';
+    const price = card.querySelector('.price-num')?.textContent || '';
+    // Cloudflare Web Analytics 自定义事件（如已接入CF Analytics会自动上报）
+    if (window.cfBeacon) {
+      window.cfBeacon.push({ name: 'book_click', data: { route: from, price } });
+    }
+  });
+
   load();
 </script>
 </body>

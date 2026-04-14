@@ -123,10 +123,15 @@
       <div class="fg"><label>仓库名</label><input id="ghRepo" placeholder="shengzhefei"></div>
       <div class="fg"><label>分支</label><input id="ghBranch" value="main"></div>
       <div class="fg"><label>GitHub Token（repo 权限）</label><input id="ghToken" type="password" placeholder="ghp_xxx" class="mono"></div>
+      <div class="fg full">
+        <label>推送通知主题（ntfy.sh · 可选）<a href="https://ntfy.sh" target="_blank" style="color:var(--primary);font-size:10px;margin-left:6px">什么是 ntfy？</a></label>
+        <input id="ntfyTopic" placeholder="例如 szf-abc123（自定义唯一字符串，用户订阅同一主题收通知）" class="mono">
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn btn-p btn-sm" onclick="saveSettings()">保存设置</button>
       <button class="btn btn-g btn-sm" onclick="testGH()">测试连接</button>
+      <button class="btn btn-g btn-sm" onclick="testNtfy()">测试推送</button>
     </div>
   </div>
 
@@ -238,11 +243,13 @@
 
   <!-- 已发布 -->
   <div class="sec">
-    <div class="sec-title">📋 已发布机票</div>
-    <div class="btn-row" style="margin-bottom:12px">
-      <button class="btn btn-g btn-sm" onclick="loadList()">刷新列表</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="sec-title" style="margin-bottom:0">📋 已发布机票 <span id="flCount" style="font-size:11px;font-weight:400;color:var(--muted)"></span></div>
+      <button class="btn btn-g btn-sm" onclick="loadList()">刷新</button>
     </div>
-    <div id="flList"><p style="color:var(--muted);font-size:13px">保存设置后点击刷新加载</p></div>
+    <div id="flList" style="max-height:500px;overflow-y:auto;padding-right:2px">
+      <p style="color:var(--muted);font-size:13px">保存设置后自动加载</p>
+    </div>
   </div>
 </div>
 
@@ -303,13 +310,14 @@ function saveSettings() {
   localStorage.setItem(SKEY, JSON.stringify({
     owner: g('ghOwner'), repo: g('ghRepo'), branch: g('ghBranch')||'main',
     token: g('ghToken'), geminiKey: g('geminiKey'), deepseekKey: g('deepseekKey'),
+    ntfyTopic: g('ntfyTopic'),
   }));
   toast('设置已保存', 'ok');
 }
 function cfg() { try{return JSON.parse(localStorage.getItem(SKEY)||'{}');}catch(e){return{};} }
 function loadSettings() {
   const s=cfg();
-  const map={ghOwner:'owner',ghRepo:'repo',ghBranch:'branch',ghToken:'token',geminiKey:'geminiKey',deepseekKey:'deepseekKey'};
+  const map={ghOwner:'owner',ghRepo:'repo',ghBranch:'branch',ghToken:'token',geminiKey:'geminiKey',deepseekKey:'deepseekKey',ntfyTopic:'ntfyTopic'};
   Object.entries(map).forEach(([domId,key])=>{ if(s[key]) $$(domId).value=s[key]; });
 }
 async function testGH() {
@@ -317,6 +325,26 @@ async function testGH() {
   if(!owner||!token){toast('请先填写并保存设置','err');return;}
   try{const r=await ghGet(`/repos/${owner}/${repo}`);toast(`连接成功：${r.full_name}`,'ok');}
   catch(e){toast('连接失败：'+e.message,'err');}
+}
+async function sendNtfy(topic, from, to, price) {
+  await fetch(`https://ntfy.sh/${topic}`, {
+    method:'POST',
+    headers:{
+      'Title': '✈ 省着飞 · 新低价机票',
+      'Priority': 'high',
+      'Tags': 'airplane,money_with_wings',
+      'Click': 'https://mdeepresearch-coder.github.io/shengzhefei/',
+    },
+    body: `${from} → ${to}  ¥${price}/人\n点击查看详情并预订 →`,
+  });
+}
+async function testNtfy() {
+  const {ntfyTopic}=readCfg();
+  if(!ntfyTopic){toast('请先填写推送主题','err');return;}
+  try {
+    await sendNtfy(ntfyTopic,'上海','巴黎','4999（测试）');
+    toast('推送已发送，请检查手机通知','ok');
+  } catch(e){toast('推送失败：'+e.message,'err');}
 }
 
 // 读取配置：优先表单当前值，回退到 localStorage
@@ -329,6 +357,7 @@ function readCfg() {
     token:  g('ghToken')      || s.token  || '',
     geminiKey:   g('geminiKey')    || s.geminiKey    || '',
     deepseekKey: g('deepseekKey')  || s.deepseekKey  || '',
+    ntfyTopic:   g('ntfyTopic')    || s.ntfyTopic    || '',
   };
 }
 
@@ -535,12 +564,15 @@ async function publish() {
       image:imgPath, ctripUrl:ctripUrl(),
     });
 
-    await putTxt('flights.json',JSON.stringify(flights,null,2),`add: ${g('rFrom')}→${g('rTo')} ¥${g('rPrice')}`,sha,s);
+    const fromCity=g('rFrom'), toCity=g('rTo'), price=g('rPrice');
+    await putTxt('flights.json',JSON.stringify(flights,null,2),`add: ${fromCity}→${toCity} ¥${price}`,sha,s);
     hideProgress();
-    toast(`✅ 发布成功！${g('rFrom')}→${g('rTo')} ¥${g('rPrice')}`,'ok');
+    toast(`✅ 发布成功！${fromCity}→${toCity} ¥${price}`,'ok');
+    // ntfy 推送通知
+    if(s.ntfyTopic) sendNtfy(s.ntfyTopic, fromCity, toCity, price).catch(()=>{});
     resetAll();
-    // 延迟 2.5s 等 GitHub 传播后再刷新列表
-    setTimeout(loadList, 2500);
+    // 延迟 3s 等 GitHub 传播后再刷新列表
+    setTimeout(loadList, 3000);
   } catch(e){
     hideProgress();
     toast('发布失败：'+e.message,'err');
@@ -549,22 +581,38 @@ async function publish() {
 }
 
 // ── List ──────────────────────────────────────────────────────────────────
+function fmtTime(ts) {
+  if(!ts) return '';
+  const d=new Date(ts), now=Date.now(), diff=Math.floor((now-d)/60000);
+  if(diff<1)  return '刚刚';
+  if(diff<60) return diff+'分钟前';
+  if(diff<1440) return Math.floor(diff/60)+'小时前';
+  return d.toLocaleDateString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
 async function loadList() {
   const s=readCfg();
   if(!s.owner||!s.repo||!s.token)return;
   const el=$$('flList');
   el.innerHTML='<p style="color:var(--muted);font-size:13px">加载中…</p>';
   try {
-    const {content}=await getFile('flights.json',s);
-    const list=content?JSON.parse(content):[];
+    // 加时间戳防止缓存
+    const d=await ghGet(`/repos/${s.owner}/${s.repo}/contents/flights.json?ref=${s.branch}&t=${Date.now()}`,s.token);
+    const raw2=atob(d.content.replace(/\n/g,''));
+    const bytes=new Uint8Array(raw2.length);
+    for(let i=0;i<raw2.length;i++) bytes[i]=raw2.charCodeAt(i);
+    const list=JSON.parse(new TextDecoder('utf-8').decode(bytes)||'[]');
+    const cnt=$$('flCount');
+    if(cnt) cnt.textContent=list.length?`共 ${list.length} 条`:'';
     if(!list.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">暂无数据</p>';return;}
     const raw=`https://raw.githubusercontent.com/${s.owner}/${s.repo}/${s.branch}/`;
     el.innerHTML=list.map(f=>`
       <div class="fli" id="li-${f.id}">
-        ${f.image?`<img class="fli-img" src="${raw}${e(f.image)}" onerror="this.style.opacity='.3'">`:`<div style="width:52px;height:65px;background:#eee;border-radius:5px;flex-shrink:0"></div>`}
+        ${f.image?`<img class="fli-img" src="${raw}${e(f.image)}?t=${Date.now()}" onerror="this.style.opacity='.3'">`:`<div style="width:52px;height:65px;background:#eee;border-radius:5px;flex-shrink:0"></div>`}
         <div class="fli-info">
           <div class="fli-route">${e(f.from)} → ${e(f.to)}</div>
           <div class="fli-meta">${e(f.tripType==='round'||f.tripType==='Round Trip'?'往返':f.tripType||'')} · ${f.departDate||''}</div>
+          <div style="font-size:11px;color:#a0aec0;margin-top:2px">🕐 ${fmtTime(f.uploadTime)}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
           <span class="fli-price">¥${f.price}</span>
@@ -576,12 +624,19 @@ async function loadList() {
 
 async function del(fid) {
   if(!confirm('确认删除？'))return;
+  // 立即从DOM中移除，不等网络
+  document.getElementById('li-'+fid)?.remove();
+  const cnt=$$('flCount');
+  if(cnt) {
+    const n=parseInt(cnt.textContent)||0;
+    if(n>1) cnt.textContent=`共 ${n-1} 条`; else cnt.textContent='';
+  }
+  toast('删除中…');
   const s=readCfg();
   try {
     const {sha,content}=await getFile('flights.json',s);
     const list=JSON.parse(content||'[]').filter(f=>f.id!==fid);
     await putTxt('flights.json',JSON.stringify(list,null,2),`remove ${fid}`,sha,s);
-    document.getElementById('li-'+fid)?.remove();
     toast('已删除','ok');
   }catch(ex){toast('删除失败：'+ex.message,'err');}
 }
@@ -668,6 +723,11 @@ function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('加载失败: '+src));document.head.appendChild(s);});}
 
 loadSettings();
+// 页面加载后自动读取已发布列表（如果已有配置）
+window.addEventListener('load', () => {
+  const s = cfg();
+  if (s.owner && s.repo && s.token) loadList();
+});
 </script>
 </body>
 </html>
