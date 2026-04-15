@@ -8,7 +8,7 @@ import urllib.error
 import sys
 
 OS_APP_ID = '038f7aa0-03bc-4003-904e-a936b91b23df'
-OS_API_KEY = 'os_v2_app_aohxviadxraahecove3lsgzd35srdlwldiquahe6exn4hllbctbuiit3276yqqiquduhe7ozwp6w2jqu2ei5tgnawebe7amt76rq6iy'
+OS_API_KEY = 'os_v2_app_aohxviadxraahecove3lsgzd37d2tyzhedlu3tflt57mtncr4lc7jwxgwh3qlkit6mdclgsrf42iyts7x2bh2ak7w3obdo7o7aauqva'
 
 with open('flights.json', encoding='utf-8') as f:
     flights = json.load(f)
