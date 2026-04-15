@@ -1,5 +1,19 @@
 [
   {
+    "id": "flight-1776257089125",
+    "uploadTime": "2026-04-15T12:44:49.125Z",
+    "from": "成都",
+    "fromCode": "CTU",
+    "to": "米兰",
+    "toCode": "MXP",
+    "price": 8057,
+    "tripType": "往返",
+    "departDate": "2026-05-02",
+    "returnDate": "2026-05-08",
+    "image": "images/flight-1776257089125.jpg",
+    "ctripUrl": "https://flights.ctrip.com/online/list/round-CTU-MXP?depdate=2026-05-02_2026-05-08"
+  },
+  {
     "id": "flight-1776247357048",
     "uploadTime": "2026-04-15T10:02:37.048Z",
     "from": "北京",
