@@ -1,5 +1,19 @@
 [
   {
+    "id": "flight-1776247357048",
+    "uploadTime": "2026-04-15T10:02:37.048Z",
+    "from": "北京",
+    "fromCode": "PKX",
+    "to": "米兰",
+    "toCode": "MXP",
+    "price": 4737,
+    "tripType": "往返",
+    "departDate": "2026-06-18",
+    "returnDate": "2026-06-25",
+    "image": "images/flight-1776247357048.jpg",
+    "ctripUrl": "https://flights.ctrip.com/online/list/round-PKX-MXP?depdate=2026-06-18_2026-06-25"
+  },
+  {
     "id": "flight-1776171458549",
     "uploadTime": "2026-04-14T12:57:38.549Z",
     "from": "上海",
