@@ -38,7 +38,7 @@
     "tripType": "往返",
     "departDate": "2026-08-22",
     "returnDate": "2026-09-01",
-    "image": "images/flight-1776171458549.png",
+    "image": "images/flight-1776171458549.jpg",
     "ctripUrl": "https://flights.ctrip.com/online/list/round-PVG-FRA?depdate=2026-08-22_2026-09-01"
   },
   {
@@ -52,7 +52,7 @@
     "tripType": "往返",
     "departDate": "2026-07-01",
     "returnDate": "2026-07-08",
-    "image": "images/flight-1776169669729.png",
+    "image": "images/flight-1776169669729.jpg",
     "ctripUrl": "https://flights.ctrip.com/online/list/round-PVG-MXP?depdate=2026-07-01_2026-07-08"
   },
   {
@@ -66,7 +66,7 @@
     "tripType": "往返",
     "departDate": "2026-06-18",
     "returnDate": "2026-06-25",
-    "image": "images/flight-1776169313988.png",
+    "image": "images/flight-1776169313988.jpg",
     "ctripUrl": "https://flights.ctrip.com/online/list/round-PKX-MXP?depdate=2026-06-18_2026-06-25"
   },
   {
@@ -80,7 +80,7 @@
     "tripType": "往返",
     "departDate": "2026-06-18",
     "returnDate": "2026-06-25",
-    "image": "images/flight-1776154633479.png",
+    "image": "images/flight-1776154633479.jpg",
     "ctripUrl": "https://flights.ctrip.com/online/list/round-PKX-MXP?depdate=2026-06-18_2026-06-25"
   },
   {
@@ -94,7 +94,7 @@
     "tripType": "往返",
     "departDate": "2026-05-18",
     "returnDate": "2026-05-25",
-    "image": "images/flight-1776073472678.png",
+    "image": "images/flight-1776073472678.jpg",
     "ctripUrl": "https://flights.ctrip.com/online/list/round-PKX-SYD?depdate=2026-05-18_2026-05-25"
   },
   {
@@ -108,7 +108,7 @@
     "tripType": "往返",
     "departDate": "2026-08-22",
     "returnDate": "2026-09-01",
-    "image": "images/flight-1776072446600.png",
+    "image": "images/flight-1776072446600.jpg",
     "ctripUrl": "https://flights.ctrip.com/online/list/round-PVG-FRA?depdate=2026-08-22_2026-09-01"
   }
 ]
