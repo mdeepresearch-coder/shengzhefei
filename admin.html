@@ -142,30 +142,30 @@
     <div class="sec-title">📸 上传截图 · 发布机票</div>
 
     <div class="tabs">
-      <button class="tab on" data-m="gemini" onclick="setMode('gemini')">🆓 Gemini</button>
-      <button class="tab"    data-m="ocr"    onclick="setMode('ocr')">📷 本地OCR+DeepSeek</button>
+      <button class="tab on" data-m="sf"     onclick="setMode('sf')">🇨🇳 国内AI识图</button>
+      <button class="tab"    data-m="gemini" onclick="setMode('gemini')">🌐 Gemini（需VPN）</button>
       <button class="tab"    data-m="manual" onclick="setMode('manual')">✏️ 手动</button>
     </div>
 
-    <!-- Gemini panel -->
-    <div class="panel on" id="pGemini">
+    <!-- SiliconFlow panel（国内可访问，直接识图） -->
+    <div class="panel on" id="pSf">
       <div class="fg" style="margin-bottom:8px">
-        <label>Gemini API Key（<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary)">aistudio.google.com</a> 免费获取）</label>
-        <input id="geminiKey" type="password" placeholder="AIzaSy..." class="mono">
-      </div>
-      <div class="alert alert-info">每天 1500 次免费。用 Google 账号登录 AI Studio，1分钟可拿到 Key。</div>
-    </div>
-
-    <!-- OCR+DeepSeek panel -->
-    <div class="panel" id="pOcr">
-      <div class="fg" style="margin-bottom:8px">
-        <label>DeepSeek API Key（<a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--primary)">platform.deepseek.com</a> 获取，极低费用）</label>
-        <input id="deepseekKey" type="password" placeholder="sk-..." class="mono">
+        <label>硅基流动 API Key（<a href="https://cloud.siliconflow.cn/account/ak" target="_blank" style="color:var(--primary)">cloud.siliconflow.cn</a> 免费注册获取）</label>
+        <input id="sfKey" type="password" placeholder="sk-..." class="mono">
       </div>
       <div class="alert alert-info">
-        流程：① 浏览器本地 Tesseract OCR 识别图片文字（完全免费）→ ② DeepSeek 解析文字结构（每次约 ¥0.001）。<br>
-        首次使用需下载 OCR 语言包（约 10MB），请保持网络畅通。
+        ✅ <strong>国内直接访问，无需 VPN。</strong>直接用 Qwen2-VL 视觉模型分析图片，比 OCR 准确很多。<br>
+        注册送免费额度，每次识别约 ¥0.002，几乎免费。<a href="https://cloud.siliconflow.cn/account/ak" target="_blank" style="color:var(--primary);font-weight:600">点击注册 →</a>
       </div>
+    </div>
+
+    <!-- Gemini panel -->
+    <div class="panel" id="pGemini">
+      <div class="fg" style="margin-bottom:8px">
+        <label>Gemini API Key（<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary)">aistudio.google.com</a> 免费获取，需VPN）</label>
+        <input id="geminiKey" type="password" placeholder="AIzaSy..." class="mono">
+      </div>
+      <div class="alert alert-warn">⚠️ Gemini 在国内需要 VPN。国内用户请用左边的"国内AI识图"。</div>
     </div>
 
     <!-- Manual panel -->
@@ -316,7 +316,7 @@ function autoCode(fromId, toId) {
 }
 
 // ── State ─────────────────────────────────────────────────────────────────
-let b64=null, mime='image/jpeg', dataUrl=null, aiMode='gemini';
+let b64=null, mime='image/jpeg', dataUrl=null, aiMode='sf';
 
 // ── Settings ──────────────────────────────────────────────────────────────
 const SKEY = 'szf_v4';
@@ -324,13 +324,14 @@ function saveSettings() {
   localStorage.setItem(SKEY, JSON.stringify({
     owner: g('ghOwner'), repo: g('ghRepo'), branch: g('ghBranch')||'main',
     token: g('ghToken'), geminiKey: g('geminiKey'), deepseekKey: g('deepseekKey'),
+    sfKey: g('sfKey'),
   }));
   toast('设置已保存', 'ok');
 }
 function cfg() { try{return JSON.parse(localStorage.getItem(SKEY)||'{}');}catch(e){return{};} }
 function loadSettings() {
   const s=cfg();
-  const map={ghOwner:'owner',ghRepo:'repo',ghBranch:'branch',ghToken:'token',geminiKey:'geminiKey',deepseekKey:'deepseekKey'};
+  const map={ghOwner:'owner',ghRepo:'repo',ghBranch:'branch',ghToken:'token',geminiKey:'geminiKey',deepseekKey:'deepseekKey',sfKey:'sfKey'};
   Object.entries(map).forEach(([domId,key])=>{ if(s[key]) $$(domId).value=s[key]; });
 }
 async function testGH() {
@@ -399,6 +400,7 @@ function readCfg() {
     token:  g('ghToken')      || s.token  || '',
     geminiKey:   g('geminiKey')    || s.geminiKey    || '',
     deepseekKey: g('deepseekKey')  || s.deepseekKey  || '',
+    sfKey:       g('sfKey')        || s.sfKey        || '',
   };
 }
 
@@ -451,16 +453,59 @@ async function analyze() {
   if(aiMode==='manual'){showResult();return;}
 
   try {
-    if(aiMode==='gemini') {
+    if(aiMode==='sf') {
+      await analyzeSF(s.sfKey);
+    } else if(aiMode==='gemini') {
       await analyzeGemini(s.geminiKey);
-    } else if(aiMode==='ocr') {
-      await analyzeOCR(s.deepseekKey);
     }
   } catch(e) {
     console.error(e);
     toast('识别失败：'+e.message+'\n已切换手动填写','err');
   }
   showResult();
+}
+
+// 硅基流动（国内可访问）：Qwen2-VL 直接识图，无需 OCR 中间步骤
+async function analyzeSF(key) {
+  if(!key){toast('请填写硅基流动 API Key','err');return;}
+  setLoadMsg('国内AI识图中…','Qwen2-VL 直接分析图片，请稍候');
+  // 优先用 72B 大模型，失败降级到 7B
+  const models = ['Qwen/Qwen2-VL-72B-Instruct','Qwen/Qwen2-VL-7B-Instruct'];
+  let lastErr = '';
+  for(const model of models) {
+    setLoadMsg('国内AI识图中…', model);
+    let r;
+    try {
+      r = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+        method:'POST',
+        headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model,
+          messages:[{role:'user',content:[
+            {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`}},
+            {type:'text',text:PROMPT}
+          ]}],
+          max_tokens:300,
+          temperature:0.1
+        })
+      });
+    } catch(netErr) {
+      throw new Error('网络错误：'+netErr.message);
+    }
+    const d = await r.json();
+    if(!r.ok){
+      const msg = d.message || d.error?.message || '';
+      if(r.status===429||r.status===503||msg.includes('quota')||msg.includes('limit')){
+        lastErr=model+': '+msg.slice(0,60); continue;
+      }
+      throw new Error(msg||'SiliconFlow '+r.status);
+    }
+    const txt = d.choices?.[0]?.message?.content||'';
+    const info = JSON.parse(txt.match(/\{[\s\S]*?\}/)?.[0]||'null');
+    if(info){ fillFields(info); return; }
+    lastErr = model+': 返回格式异常'; continue;
+  }
+  throw new Error('识别失败：'+lastErr+'\n请检查 Key 是否正确，或切换手动填写');
 }
 
 // Gemini：直接发图片
