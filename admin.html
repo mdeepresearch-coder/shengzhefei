@@ -424,9 +424,25 @@ document.addEventListener('paste',e=>{
 
 function onFile(file) {
   if(!file)return;
-  mime=file.type||'image/jpeg';
   const rd=new FileReader();
-  rd.onload=ev=>{dataUrl=ev.target.result;b64=dataUrl.split(',')[1];analyze();};
+  rd.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      // 最大宽度1200px，超出则等比缩小
+      const MAX=1200;
+      let w=img.width, h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      const cvs=document.createElement('canvas');
+      cvs.width=w; cvs.height=h;
+      cvs.getContext('2d').drawImage(img,0,0,w,h);
+      // 转JPEG quality=0.82，体积缩小约10x
+      dataUrl=cvs.toDataURL('image/jpeg',0.82);
+      mime='image/jpeg';
+      b64=dataUrl.split(',')[1];
+      analyze();
+    };
+    img.src=ev.target.result;
+  };
   rd.readAsDataURL(file);
 }
 
@@ -646,8 +662,7 @@ async function publish() {
   $$('pubBtn').disabled=true;
   try {
     const now=new Date(),fid=`flight-${now.getTime()}`;
-    const ext=mime.split('/')[1]?.replace('jpeg','jpg')||'jpg';
-    const imgPath=`images/${fid}.${ext}`;
+    const imgPath=`images/${fid}.jpg`;
 
     setProgress('上传截图…');
     const ei=await getFile(imgPath,s);
