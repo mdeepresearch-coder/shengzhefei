@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>省着飞 ✈ 低价机票发现</title>
+  <title>省着飞 · 人工精选低价机票</title>
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
         appId: "038f7aa0-03bc-4003-904e-a936b91b23df",
-        // 禁用 OneSignal 所有自带弹框，改用下方自定义中文弹框
         notifyButton: { enable: false },
         welcomeNotification: {
           title: "省着飞 ✈",
@@ -18,11 +17,10 @@
         }
       });
       window._OS = OneSignal;
-      // 4 秒后显示自定义中文订阅弹框（未授权且未曾处理过时）
       try {
         const alreadyHandled = localStorage.getItem('szf_push_v1');
         const granted = await OneSignal.Notifications.permission;
-        if(!alreadyHandled && !granted) {
+        if (!alreadyHandled && !granted) {
           setTimeout(() => document.getElementById('pushModal')?.classList.add('on'), 4000);
         }
       } catch(e) { console.warn('OneSignal check:', e); }
@@ -39,363 +37,557 @@
   </script>
   <style>
     :root {
-      --bg:      #f0f4f8;
-      --card:    #ffffff;
-      --primary: #1a56db;
-      --price:   #e53e3e;
-      --text:    #1a202c;
-      --muted:   #718096;
-      --border:  #e2e8f0;
+      --bg:       #F7F3EE;
+      --card:     #FFFFFF;
+      --hdr:      #1C1714;
+      --accent:   #C96A2E;
+      --price:    #C0392B;
+      --text:     #1C1714;
+      --muted:    #7A6B61;
+      --border:   #EBE4DC;
+      --tag-bg:   #FEF0E4;
+      --tag-text: #8B4A1A;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                   "Microsoft YaHei", "Helvetica Neue", sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Header ── */
+    /* ── Header ───────────────────────────────────────────── */
     header {
-      background: linear-gradient(135deg, #1a56db 0%, #0d3b9e 100%);
-      color: white;
-      padding: 22px 16px 30px;
+      background: var(--hdr);
+      color: #FAF7F4;
+      padding: clamp(24px, 5vw, 40px) 20px clamp(28px, 5vw, 44px);
       text-align: center;
       position: relative;
     }
-    header h1 { font-size: 26px; font-weight: 800; }
-    header p  { font-size: 13px; opacity: .75; margin-top: 5px; }
-    .wave {
-      position: absolute; bottom: -1px; left: 0; right: 0; height: 20px;
+    .hdr-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .hdr-eyebrow::before,
+    .hdr-eyebrow::after {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--accent);
+      opacity: .6;
+    }
+    header h1 {
+      font-size: clamp(28px, 6vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    header h1 span { color: var(--accent); }
+    header p {
+      font-size: 13px;
+      color: rgba(250,247,244,.5);
+      letter-spacing: .02em;
+    }
+    /* Scallop edge */
+    .hdr-edge {
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 18px;
       background: var(--bg);
-      clip-path: ellipse(55% 100% at 50% 100%);
+      clip-path: ellipse(52% 100% at 50% 100%);
     }
 
-    /* ── Filter ── */
-    .filter-bar {
-      display: flex; gap: 8px;
-      padding: 16px 16px 8px;
-      overflow-x: auto; scrollbar-width: none;
+    /* ── Filter section ────────────────────────────────────── */
+    .filter-section {
+      padding: 20px 16px 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-    .filter-bar::-webkit-scrollbar { display: none; }
-    .filter-btn {
-      flex-shrink: 0; padding: 6px 14px;
-      border-radius: 999px; border: 1.5px solid var(--border);
-      background: white; font-size: 13px; color: var(--muted);
-      cursor: pointer; transition: all .15s; white-space: nowrap;
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .filter-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .filter-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      color: var(--muted);
+      white-space: nowrap;
+      width: 30px;
+      flex-shrink: 0;
+    }
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
+    .filter-pills::-webkit-scrollbar { display: none; }
+    .fpill {
+      flex-shrink: 0;
+      padding: 5px 13px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+      font-family: inherit;
+      font-weight: 500;
+    }
+    .fpill:hover { border-color: var(--accent); color: var(--accent); }
+    .fpill.on {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
 
-    /* ── Stats ── */
-    .stats { padding: 0 16px 12px; font-size: 12px; color: var(--muted); }
-    .stats strong { color: var(--text); }
+    /* ── Stats ─────────────────────────────────────────────── */
+    .stats {
+      padding: 14px 16px 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .stats strong { color: var(--text); font-weight: 700; }
 
-    /* ── Grid ── */
+    /* ── Grid ──────────────────────────────────────────────── */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 16px;
-      padding: 0 16px 80px;
+      padding: 12px 16px 80px;
       max-width: 1400px;
       margin: 0 auto;
     }
 
-    /* ── Card ── */
+    /* ── Card ──────────────────────────────────────────────── */
     .card {
       background: var(--card);
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      box-shadow: 0 1px 4px rgba(28,23,20,.06), 0 4px 16px rgba(28,23,20,.06);
       cursor: pointer;
-      transition: transform .18s, box-shadow .18s;
+      transition: transform .2s ease, box-shadow .2s ease;
       text-decoration: none;
       color: inherit;
       display: flex;
       flex-direction: column;
+      border: 1px solid var(--border);
     }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,.13); }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 2px 8px rgba(28,23,20,.08), 0 12px 32px rgba(28,23,20,.1);
+    }
     .card:active { transform: translateY(0); }
 
-    /* Screenshot image — full image, no crop */
+    /* Image area */
     .card-img-wrap {
-      width: 100%;
-      background: linear-gradient(160deg, #dbeafe, #bfdbfe);
       position: relative;
+      width: 100%;
+      background: #F0EBE4;
       overflow: hidden;
+      cursor: zoom-in;
     }
     .card-img {
       width: 100%;
       display: block;
-      cursor: zoom-in;
+      transition: opacity .3s;
     }
-    .zoom-hint {
-      position: absolute;
-      bottom: 8px; right: 8px;
-      background: rgba(0,0,0,.45);
-      color: white;
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 99px;
-      pointer-events: none;
-      backdrop-filter: blur(4px);
-    }
-
-    /* Lightbox */
-    #lb {
-      display: none;
-      position: fixed; inset: 0; z-index: 9999;
-      background: rgba(0,0,0,.88);
+    .card-img.loading { opacity: 0; }
+    .card-img-ph {
+      width: 100%;
+      height: 180px;
+      display: flex;
       align-items: center;
       justify-content: center;
-      cursor: zoom-out;
-    }
-    #lb.on { display: flex; }
-    #lb img {
-      max-width: min(92vw, 520px);
-      max-height: 92vh;
-      object-fit: contain;
-      border-radius: 10px;
-      box-shadow: 0 8px 40px rgba(0,0,0,.6);
-    }
-    #lb-close {
-      position: absolute; top: 16px; right: 18px;
-      color: white; font-size: 28px; cursor: pointer;
-      line-height: 1; opacity: .75;
-    }
-    #lb-close:hover { opacity: 1; }
-    .card-img-ph {
-      width: 100%; height: 200px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 48px;
+      font-size: 40px;
+      background: #F0EBE4;
+      color: var(--muted);
     }
 
-    /* Info bar */
+    /* NEW badge */
+    .new-badge {
+      position: absolute;
+      top: 10px; left: 10px;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      letter-spacing: .08em;
+      box-shadow: 0 2px 8px rgba(201,106,46,.4);
+      z-index: 2;
+    }
+
+    /* Info area */
     .card-info {
-      padding: 14px 16px 16px;
-      border-top: 3px solid var(--border);
-      background: #f8fafc;
+      padding: 14px 16px 15px;
+      border-top: 1px solid var(--border);
+      background: #FDFCFA;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
     }
 
-    .route-line {
+    /* Route */
+    .route-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 9px;
+    }
+    .city {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      flex: 1;
+    }
+    .city.dest { text-align: right; }
+    .route-arrow {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 8px;
+      gap: 2px;
+    }
+    .route-arrow svg {
+      width: 32px;
+      height: 14px;
+      opacity: .35;
+    }
+
+    /* Dates */
+    .dates-row {
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-bottom: 8px;
+      margin-bottom: 11px;
+      padding: 7px 10px;
+      background: var(--tag-bg);
+      border-radius: 8px;
     }
-    .city-name {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-    .plane {
+    .date-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       flex: 1;
-      text-align: center;
-      font-size: 18px;
-      opacity: .5;
+      gap: 1px;
+    }
+    .date-label {
+      font-size: 10px;
+      color: var(--tag-text);
+      opacity: .7;
+      font-weight: 600;
+      letter-spacing: .04em;
+    }
+    .date-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--tag-text);
+      letter-spacing: .01em;
+      font-variant-numeric: tabular-nums;
+    }
+    .date-sep {
+      font-size: 12px;
+      color: var(--accent);
+      opacity: .6;
+      flex-shrink: 0;
     }
 
-    .price-line {
+    /* Price */
+    .price-row {
       display: flex;
       align-items: baseline;
-      gap: 6px;
-      margin-bottom: 10px;
+      gap: 7px;
+      margin-bottom: 11px;
     }
-    .trip-type {
-      font-size: 12px;
-      color: var(--muted);
-      background: #f7faff;
-      border: 1px solid var(--border);
-      padding: 2px 7px;
+    .trip-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--tag-text);
+      background: var(--tag-bg);
+      padding: 2px 8px;
       border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .price-sym {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--price);
     }
     .price-num {
-      font-size: 30px;
+      font-size: 32px;
       font-weight: 900;
       color: var(--price);
-      letter-spacing: -1px;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
     }
-    .price-symbol { font-size: 16px; font-weight: 700; color: var(--price); }
-    .price-note { font-size: 12px; color: var(--muted); }
+    .price-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: -2px;
+    }
 
+    /* Footer row */
     .card-foot {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding-top: 10px;
       border-top: 1px solid var(--border);
+      margin-top: auto;
     }
-    .update-time { font-size: 11px; color: #a0aec0; }
+    .update-time { font-size: 11px; color: #A89C94; }
     .book-btn {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
-      color: var(--primary);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 3px;
     }
 
-    /* ── States ── */
+    /* ── Lightbox ───────────────────────────────────────────── */
+    #lb {
+      display: none;
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(28,23,20,.92);
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      backdrop-filter: blur(4px);
+    }
+    #lb.on { display: flex; }
+    #lb img {
+      max-width: min(92vw, 540px);
+      max-height: 88vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+      cursor: default;
+    }
+    #lb-close {
+      position: absolute; top: 20px; right: 22px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(250,247,244,.12);
+      color: #FAF7F4;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    #lb-close:hover { background: rgba(250,247,244,.22); }
+
+    /* ── States ─────────────────────────────────────────────── */
     .empty {
       grid-column: 1/-1;
       text-align: center;
-      padding: 60px 20px;
+      padding: 64px 20px;
       color: var(--muted);
     }
-    .empty .icon { font-size: 48px; margin-bottom: 14px; }
-    .empty p { font-size: 14px; line-height: 1.8; }
-    .empty code {
-      background: #edf2f7; border-radius: 4px;
-      padding: 1px 6px; font-size: 13px;
-    }
-    .loading { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--muted); font-size: 14px; }
-
-    footer {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: white; border-top: 1px solid var(--border);
-      padding: 9px 16px; text-align: center;
-      font-size: 11px; color: var(--muted);
+    .empty .icon { font-size: 44px; margin-bottom: 16px; opacity: .5; }
+    .empty p { font-size: 14px; line-height: 2; }
+    .loading {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 64px;
+      color: var(--muted);
+      font-size: 14px;
     }
 
-    /* ── 浮动新机票胶囊通知 ── */
+    /* ── New card animation ──────────────────────────────────── */
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card.is-new {
+      animation: cardIn .45s ease forwards;
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ── Floating pill ───────────────────────────────────────── */
     #newPill {
       display: none;
       position: fixed;
       top: 16px; left: 50%;
       transform: translateX(-50%);
-      background: linear-gradient(135deg, #38a169, #276749);
-      color: white;
-      padding: 9px 20px;
-      border-radius: 99px;
-      font-size: 13px; font-weight: 700;
+      background: var(--hdr);
+      color: #FAF7F4;
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-size: 13px; font-weight: 600;
       z-index: 500;
-      box-shadow: 0 4px 20px rgba(56,161,105,.5);
+      box-shadow: 0 4px 20px rgba(28,23,20,.3);
       cursor: pointer;
       white-space: nowrap;
-      animation: pillIn .35s cubic-bezier(.34,1.56,.64,1);
+      border: 1px solid rgba(250,247,244,.12);
+      animation: pillIn .35s cubic-bezier(.34,1.4,.64,1);
     }
     #newPill.on { display: block; }
     @keyframes pillIn {
-      from { opacity:0; transform:translateX(-50%) translateY(-16px) scale(.88); }
-      to   { opacity:1; transform:translateX(-50%) translateY(0)      scale(1);  }
+      from { opacity:0; transform:translateX(-50%) translateY(-12px) scale(.92); }
+      to   { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
     }
 
-    /* ── 底部自动更新 toast ── */
+    /* ── Update toast ────────────────────────────────────────── */
     #updateToast {
       position: fixed;
       bottom: 64px; left: 50%;
-      transform: translateX(-50%) translateY(12px);
-      background: #1a202c; color: white;
-      padding: 10px 22px;
+      transform: translateX(-50%) translateY(8px);
+      background: var(--hdr);
+      color: #FAF7F4;
+      padding: 10px 20px;
       border-radius: 10px;
       font-size: 13px; font-weight: 600;
       z-index: 500;
       opacity: 0;
       pointer-events: none;
-      transition: opacity .3s, transform .3s;
+      transition: opacity .25s, transform .25s;
       white-space: nowrap;
     }
     #updateToast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ── 新卡片入场动画 ── */
-    @keyframes newCardIn {
-      0%   { opacity:0; transform:translateY(-14px); outline: 2px solid #38a169; outline-offset:2px; }
-      50%  { outline: 2px solid #38a169; outline-offset:2px; }
-      100% { opacity:1; transform:translateY(0);     outline: 2px solid transparent; }
-    }
-    .card.is-new { animation: newCardIn .55s ease forwards; }
-
-    /* ── New badge on card ── */
-    .card-img-wrap { position: relative; }
-    .new-badge {
-      position: absolute; top: 10px; left: 10px;
-      background: #e53e3e; color: white;
-      font-size: 11px; font-weight: 800;
-      padding: 2px 8px; border-radius: 99px;
-      letter-spacing: .5px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.25);
-      z-index: 2;
+    /* ── Footer ──────────────────────────────────────────────── */
+    footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 9px 16px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
     }
 
-    /* 隐藏 OneSignal 自带英文弹框，只用我们自己的中文弹框 */
+    /* ── Push modal ──────────────────────────────────────────── */
     #onesignal-slidedown-container,
     .onesignal-slidedown-container,
     #onesignal-bell-container,
     .onesignal-bell-container-bottom-right { display: none !important; }
 
-    /* ── Push 订阅弹框 ── */
     #pushModal {
       display: none;
       position: fixed; inset: 0; z-index: 10000;
       align-items: center; justify-content: center;
-      background: rgba(0,0,0,.55);
-      backdrop-filter: blur(5px);
+      background: rgba(28,23,20,.6);
+      backdrop-filter: blur(6px);
     }
     #pushModal.on { display: flex; }
     .push-card {
-      background: white;
-      border-radius: 22px;
+      background: var(--card);
+      border-radius: 20px;
       padding: 32px 24px 24px;
-      max-width: 320px; width: 88%;
+      max-width: 300px; width: 88%;
       text-align: center;
-      box-shadow: 0 24px 64px rgba(0,0,0,.35);
-      animation: slideUp .25s ease;
+      box-shadow: 0 24px 64px rgba(28,23,20,.3);
+      border: 1px solid var(--border);
+      animation: slideUp .22s ease;
     }
     @keyframes slideUp {
-      from { transform: translateY(24px); opacity: 0; }
+      from { transform: translateY(20px); opacity: 0; }
       to   { transform: translateY(0);    opacity: 1; }
     }
-    .push-icon  { font-size: 48px; margin-bottom: 12px; }
-    .push-title { font-size: 19px; font-weight: 800; color: #1a202c; margin-bottom: 10px; }
-    .push-desc  { font-size: 13px; color: #718096; line-height: 1.7; margin-bottom: 24px; }
+    .push-icon  { font-size: 44px; margin-bottom: 14px; }
+    .push-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .push-desc  { font-size: 13px; color: var(--muted); line-height: 1.75; margin-bottom: 22px; }
     .push-card button {
-      display: block; width: 100%; padding: 13px;
-      border: none; border-radius: 11px;
+      display: block; width: 100%;
+      padding: 13px;
+      border: none; border-radius: 10px;
       font-size: 15px; font-weight: 700;
       cursor: pointer; font-family: inherit;
       transition: opacity .15s;
     }
     .push-card button:active { opacity: .8; }
-    #pushYes { background: #1a56db; color: white; margin-bottom: 10px; }
-    #pushNo  { background: #f0f4f8; color: #718096; font-size: 13px; font-weight: 600; }
+    #pushYes { background: var(--accent); color: #fff; margin-bottom: 10px; }
+    #pushNo  { background: var(--bg); color: var(--muted); font-size: 13px; }
 
-    @media (max-width: 480px) {
-      .grid { grid-template-columns: 1fr; padding: 0 12px 80px; }
-      .city-name { font-size: 20px; }
-      .price-num  { font-size: 26px; }
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 500px) {
+      .grid { grid-template-columns: 1fr; padding: 8px 12px 80px; gap: 12px; }
+      .city { font-size: 19px; }
+      .price-num { font-size: 28px; }
+      .date-val { font-size: 14px; }
+    }
+    @media (min-width: 900px) {
+      .filter-section { flex-direction: row; align-items: flex-start; gap: 16px; padding: 20px 20px 4px; }
+      .filter-row + .filter-row { padding-left: 16px; border-left: 1px solid var(--border); }
     }
   </style>
 </head>
 <body>
 
-<!-- Push 订阅引导弹框 -->
+<!-- Push modal -->
 <div id="pushModal">
   <div class="push-card">
     <div class="push-icon">✈️</div>
     <div class="push-title">订阅低价机票通知</div>
-    <div class="push-desc">发现新的超低价机票时，<br>第一时间推送通知到你的手机或电脑<br>再也不错过好价格！</div>
-    <button id="pushYes" onclick="acceptPush()">🔔 立即订阅通知</button>
+    <div class="push-desc">发现新低价时，第一时间推送通知<br>再也不错过好价格</div>
+    <button id="pushYes" onclick="acceptPush()">🔔 立即订阅</button>
     <button id="pushNo"  onclick="dismissPush()">暂不订阅</button>
   </div>
 </div>
 
-<!-- 浮动新机票胶囊 -->
+<!-- New flights pill -->
 <div id="newPill" onclick="dismissPill()">
-  🆕 <span id="pillCount"></span> 条新低价机票 &nbsp;✕
+  ✦ <span id="pillCount"></span> 条新低价机票 &nbsp;✕
 </div>
-<!-- 自动更新 toast -->
+
+<!-- Update toast -->
 <div id="updateToast"></div>
 
 <!-- Lightbox -->
 <div id="lb" onclick="closeLb()">
-  <span id="lb-close" onclick="closeLb()">✕</span>
+  <div id="lb-close" onclick="closeLb()">✕</div>
   <img id="lb-img" src="" alt="" onclick="event.stopPropagation()">
 </div>
 
 <header>
-  <h1>省着飞 ✈</h1>
-  <p>人工精选低价机票 · 每日更新 · 点击直达预订</p>
-  <div class="wave"></div>
+  <div class="hdr-eyebrow">人工精选 · 每日更新</div>
+  <h1>省着<span>飞</span> ✈</h1>
+  <p>发现真正低价的国际机票，点击直达预订</p>
+  <div class="hdr-edge"></div>
 </header>
 
-<div class="filter-bar" id="filterBar">
-  <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">全部</button>
+<div class="filter-section" id="filterSection">
+  <div class="filter-row">
+    <span class="filter-label">出发</span>
+    <div class="filter-pills" id="fromBar">
+      <button class="fpill on" data-from="all" onclick="setFrom('all')">全部</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">到达</span>
+    <div class="filter-pills" id="toBar">
+      <button class="fpill on" data-to="all" onclick="setTo('all')">全部</button>
+    </div>
+  </div>
 </div>
 
 <div class="stats" id="stats"></div>
@@ -408,17 +600,14 @@
 
 <script>
   let all = [];
-  let cur = 'all';
-
+  let fromFilter = 'all';
+  let toFilter   = 'all';
   const LAST_VISIT_KEY = 'szf_last_visit';
 
+  /* ── Load ── */
   async function load() {
     if (location.protocol === 'file:') {
-      grid().innerHTML = `<div class="empty">
-        <div class="icon">🖥️</div>
-        <p>请通过网址访问，不能直接双击打开<br>
-        本地预览可在终端运行 <code>npx serve .</code></p>
-      </div>`;
+      grid().innerHTML = `<div class="empty"><div class="icon">🖥️</div><p>请通过网址访问，不能直接双击打开</p></div>`;
       return;
     }
     try {
@@ -428,56 +617,80 @@
       all.sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime));
       checkNew();
       buildFilters();
-      render(all);
-      // 记录本次访问时间（延迟1s，确保先展示完内容）
+      applyFilters();
       setTimeout(() => localStorage.setItem(LAST_VISIT_KEY, new Date().toISOString()), 1000);
-      // 启动自动轮询（用户留在页面时每60秒检查新机票）
       startPolling();
-    } catch (e) {
-      grid().innerHTML = `<div class="empty"><div class="icon">😕</div><p>数据加载失败（${e.message}），请刷新重试</p></div>`;
+    } catch(e) {
+      grid().innerHTML = `<div class="empty"><div class="icon">😕</div><p>数据加载失败（${e.message}）<br>请刷新重试</p></div>`;
     }
   }
 
+  /* ── New flights check ── */
   function checkNew() {
     const last = localStorage.getItem(LAST_VISIT_KEY);
     if (!last) return;
-    const lastDate = new Date(last);
-    const newItems = all.filter(f => new Date(f.uploadTime) > lastDate);
+    const newItems = all.filter(f => new Date(f.uploadTime) > new Date(last));
     if (!newItems.length) return;
     window._newIds = new Set(newItems.map(f => f.id));
-    // 显示浮动胶囊，5秒后自动消失
     const pill = document.getElementById('newPill');
     document.getElementById('pillCount').textContent = newItems.length;
     pill.classList.add('on');
     setTimeout(() => pill.classList.remove('on'), 6000);
   }
-
-  function dismissPill() {
-    document.getElementById('newPill').classList.remove('on');
-  }
+  function dismissPill() { document.getElementById('newPill').classList.remove('on'); }
 
   function showUpdateToast(count) {
     const el = document.getElementById('updateToast');
-    el.textContent = `✅ 已自动更新 ${count} 条新低价机票`;
+    el.textContent = `✦ 已自动更新 ${count} 条新低价机票`;
     el.classList.add('on');
     setTimeout(() => el.classList.remove('on'), 4000);
   }
 
+  /* ── Filters ── */
   function buildFilters() {
-    const bar = document.getElementById('filterBar');
-    // 每次重建，避免重复（保留"全部"按钮）
-    bar.querySelectorAll('.filter-btn:not([data-filter="all"])').forEach(b => b.remove());
-    [...new Set(all.map(f => f.to))].forEach(dest => {
+    const fromBar = document.getElementById('fromBar');
+    const toBar   = document.getElementById('toBar');
+    fromBar.querySelectorAll('.fpill:not([data-from="all"])').forEach(b => b.remove());
+    toBar.querySelectorAll('.fpill:not([data-to="all"])').forEach(b => b.remove());
+
+    [...new Set(all.map(f => f.from))].forEach(city => {
       const b = document.createElement('button');
-      b.className = 'filter-btn' + (dest === cur ? ' active' : '');
-      b.dataset.filter = dest;
-      b.textContent = dest;
-      b.onclick = () => setFilter(dest);
-      bar.appendChild(b);
+      b.className = 'fpill' + (city === fromFilter ? ' on' : '');
+      b.dataset.from = city;
+      b.textContent = city;
+      b.onclick = () => setFrom(city);
+      fromBar.appendChild(b);
+    });
+    [...new Set(all.map(f => f.to))].forEach(city => {
+      const b = document.createElement('button');
+      b.className = 'fpill' + (city === toFilter ? ' on' : '');
+      b.dataset.to = city;
+      b.textContent = city;
+      b.onclick = () => setTo(city);
+      toBar.appendChild(b);
     });
   }
 
-  // 每 60 秒轮询，用户在页面时自动更新
+  function setFrom(v) {
+    fromFilter = v;
+    document.querySelectorAll('#fromBar .fpill').forEach(b =>
+      b.classList.toggle('on', b.dataset.from === v));
+    applyFilters();
+  }
+  function setTo(v) {
+    toFilter = v;
+    document.querySelectorAll('#toBar .fpill').forEach(b =>
+      b.classList.toggle('on', b.dataset.to === v));
+    applyFilters();
+  }
+  function applyFilters() {
+    let list = all;
+    if (fromFilter !== 'all') list = list.filter(f => f.from === fromFilter);
+    if (toFilter   !== 'all') list = list.filter(f => f.to   === toFilter);
+    render(list);
+  }
+
+  /* ── Polling ── */
   function startPolling() {
     setInterval(async () => {
       try {
@@ -486,54 +699,85 @@
         const fresh = await r.json();
         fresh.sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime));
         const oldIds = new Set(all.map(f => f.id));
-        const added = fresh.filter(f => !oldIds.has(f.id));
+        const added  = fresh.filter(f => !oldIds.has(f.id));
         if (!added.length) return;
         all = fresh;
         window._newIds = new Set([...(window._newIds || new Set()), ...added.map(f => f.id)]);
         buildFilters();
-        render(cur === 'all' ? all : all.filter(x => x.to === cur));
+        applyFilters();
         showUpdateToast(added.length);
-        // 更新"本次访问时间"，让下次返回时计算准确
         localStorage.setItem(LAST_VISIT_KEY, new Date().toISOString());
-      } catch(e) { /* 静默忽略网络错误 */ }
+      } catch(e) {}
     }, 60000);
   }
 
-  function setFilter(f) {
-    cur = f;
-    document.querySelectorAll('.filter-btn').forEach(b =>
-      b.classList.toggle('active', b.dataset.filter === f));
-    render(f === 'all' ? all : all.filter(x => x.to === f));
+  /* ── Render ── */
+  function fmtDate(d) { return d ? d.slice(5).replace('-', '/') : ''; }
+  function relTime(ts) {
+    const h = Math.floor((Date.now() - new Date(ts)) / 3600000);
+    if (h < 1)  return '刚刚更新';
+    if (h < 24) return `${h}小时前`;
+    const d = Math.floor(h / 24);
+    return d < 7 ? `${d}天前` : new Date(ts).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'});
+  }
+  function e(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function render(list) {
-    document.getElementById('stats').innerHTML = `共 <strong>${list.length}</strong> 条低价线路`;
+    document.getElementById('stats').innerHTML =
+      `共 <strong>${list.length}</strong> 条低价线路`;
     if (!list.length) {
-      grid().innerHTML = '<div class="empty"><div class="icon">🔍</div><p>暂无该目的地的低价机票</p></div>';
+      grid().innerHTML = '<div class="empty"><div class="icon">🔍</div><p>暂无符合条件的低价机票</p></div>';
       return;
     }
+
     grid().innerHTML = list.map(f => {
+      const isNew  = window._newIds?.has(f.id);
+      const dep    = fmtDate(f.departDate);
+      const ret    = fmtDate(f.returnDate);
+      const isRT   = f.tripType === '往返' && ret;
+
+      const datesHtml = dep ? `
+        <div class="dates-row">
+          <div class="date-block">
+            <span class="date-label">去程</span>
+            <span class="date-val">${dep}</span>
+          </div>
+          ${isRT ? `
+          <span class="date-sep">→</span>
+          <div class="date-block">
+            <span class="date-label">返程</span>
+            <span class="date-val">${ret}</span>
+          </div>` : ''}
+        </div>` : '';
+
       const imgHtml = f.image
-        ? `<img class="card-img" src="${e(f.image)}" alt="${e(f.from)}到${e(f.to)}" loading="lazy"
+        ? `<img class="card-img" src="${e(f.image)}" alt="${e(f.from)}→${e(f.to)}" loading="lazy"
              onclick="event.preventDefault();event.stopPropagation();openLb(this.src)"
              onerror="this.parentElement.innerHTML='<div class=card-img-ph>✈️</div>'">`
         : `<div class="card-img-ph">✈️</div>`;
-      const isNew = window._newIds?.has(f.id);
-      const imgWrap = f.image
-        ? `<div class="card-img-wrap">${isNew ? '<span class="new-badge">NEW</span>' : ''}${imgHtml}<span class="zoom-hint">🔍 点击放大</span></div>`
-        : `<div class="card-img-wrap">${isNew ? '<span class="new-badge">NEW</span>' : ''}${imgHtml}</div>`;
 
-      return `<a class="card${isNew ? ' is-new' : ''}" href="${e(f.ctripUrl || '#')}" target="_blank" rel="noopener">
-        ${imgWrap}
+      return `<a class="card${isNew ? ' is-new' : ''}" href="${e(f.ctripUrl||'#')}" target="_blank" rel="noopener">
+        <div class="card-img-wrap">
+          ${isNew ? '<span class="new-badge">NEW</span>' : ''}
+          ${imgHtml}
+        </div>
         <div class="card-info">
-          <div class="route-line">
-            <span class="city-name">${e(f.from)}</span>
-            <span class="plane">✈</span>
-            <span class="city-name">${e(f.to)}</span>
+          <div class="route-row">
+            <span class="city">${e(f.from)}</span>
+            <div class="route-arrow">
+              <svg viewBox="0 0 32 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 7h28M22 2l8 5-8 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 4l-2 1 6 2-6 2 2 1" fill="currentColor" opacity=".4"/>
+              </svg>
+            </div>
+            <span class="city dest">${e(f.to)}</span>
           </div>
-          <div class="price-line">
-            <span class="trip-type">${e(f.tripType || '往返')}</span>
-            <span class="price-symbol">¥</span>
+          ${datesHtml}
+          <div class="price-row">
+            <span class="trip-tag">${e(f.tripType||'往返')}</span>
+            <span class="price-sym">¥</span>
             <span class="price-num">${f.price}</span>
             <span class="price-note">含税/人</span>
           </div>
@@ -546,19 +790,9 @@
     }).join('');
   }
 
-  function relTime(ts) {
-    const d = Math.floor((Date.now() - new Date(ts)) / 3600000);
-    if (d < 1)  return '刚刚更新';
-    if (d < 24) return `${d}小时前更新`;
-    const days = Math.floor(d / 24);
-    return days < 7 ? `${days}天前更新` : new Date(ts).toLocaleDateString('zh-CN', { month:'numeric', day:'numeric' }) + ' 更新';
-  }
-
   function grid() { return document.getElementById('grid'); }
-  function e(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
 
+  /* ── Lightbox ── */
   function openLb(src) {
     document.getElementById('lb-img').src = src;
     document.getElementById('lb').classList.add('on');
@@ -568,22 +802,11 @@
     document.getElementById('lb').classList.remove('on');
     document.body.style.overflow = '';
   }
-  document.addEventListener('keydown', e => { if(e.key==='Escape') closeLb(); });
-
-  // 统计：点击预订按钮
-  document.addEventListener('click', ev => {
-    const card = ev.target.closest('a.card');
-    if (!card) return;
-    const from = card.querySelector('.city-name')?.textContent || '';
-    const price = card.querySelector('.price-num')?.textContent || '';
-    // Cloudflare Web Analytics 自定义事件（如已接入CF Analytics会自动上报）
-    if (window.cfBeacon) {
-      window.cfBeacon.push({ name: 'book_click', data: { route: from, price } });
-    }
-  });
+  document.addEventListener('keydown', ev => { if(ev.key==='Escape') closeLb(); });
 
   load();
 </script>
-<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "60abb5d252e24fd7a58334c309f67454"}'></script><!-- End Cloudflare Web Analytics -->
+<!-- Cloudflare Web Analytics -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "60abb5d252e24fd7a58334c309f67454"}'></script>
 </body>
 </html>
